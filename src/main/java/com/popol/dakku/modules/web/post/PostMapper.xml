@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.popol.dakku.modules.web.post.PostMapper">
+	
+	<select id="getPageNm" parameterType="String" resultType="HashMap">
+		select menu_code, menu_nm from menu where menu_code = #{menu_code}	
+	</select>
+	
+	<sql id="searchFrag">
+		where p.deleted_yn = 'N'
+		and p.menu_code = #{menuCode}
+		<if test="msCode != null">
+		and p.ms_code = #{msCode}
+		</if>
+		<if test="searchWord != null">
+			<choose>
+				<when test="searchType == 'title'">
+				and p.p_title like concat('%', #{searchWord}, '%')
+				</when>
+				<when test="searchType == 'content'">
+				and p.p_content like concat('%', #{searchWord}, '%')
+				</when>
+				<otherwise>
+				and (p.p_title like concat('%', #{searchWord}, '%') or p.p_content like concat('%', #{searchWord}, '%'))
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+	
+	<select id="getTotalRecord" parameterType="PagingVO" resultType="int">
+		select 
+			count(p.p_id)
+		from post p
+		<include refid="searchFrag" />
+	</select>
+	
+	<select id="getPostList" parameterType="PagingVO" resultType="HashMap">
+		select 
+			A.p_id,
+			ifnull(A.ms_nm, 'null') as ms_nm,
+			A.p_title,
+			A.p_good,
+			A.p_cnt,
+			A.hot_yn,
+			date_format(A.created_at, '%y/%m/%d %H:%i') as created_at,
+			A.nick
+		from
+		(	
+			select 
+				p.p_id,
+				ms.ms_nm,
+				p.p_title,
+				p.p_good,
+				p.p_cnt,
+				p.hot_yn,
+		        p.created_at,
+		        nick
+			from post p
+			inner join user u on (u.u_id = p.u_id)
+			left join menu_state ms on (p.ms_code = ms.ms_code)
+			<include refid="searchFrag" />
+			order by p.p_id desc
+		) A
+		limit #{screenSize} offset #{offset}
+	</select>
+	
+	<select id="getPost" parameterType="Long" resultType="HashMap">
+		select
+			p.p_id,
+			p.p_title,
+			p.p_content,
+			p.p_good,
+			p.p_bad,
+			p.p_cnt,
+			p.hot_yn,
+			date_format(p.created_at, '%y/%m/%d %H:%i') as created_at,
+            ifnull(date_format(p.updated_at, '%y/%m/%d %H:%i'), 'null') as updated_at,
+            menu_code,
+    		ifnull(ms_code, 'null') as ms_code,
+			ifnull((select ms_nm from menu_state ms where ms.ms_code = p.ms_code), 'null') as ms_nm,
+		    p.u_id,
+		    nick,
+		    c_parent_code as icon_class,
+			c_content4 as icon_color,
+		    exp,
+		    cast(c_content1 as signed) + cast(c_content2 as signed) as next_required_exp
+		from post p
+		inner join user u on (u.u_id = p.u_id)
+		inner join common_code c on (c.c_code = u.lv_code)
+		where p.p_id = #{p_id}
+		and p.deleted_yn = 'N'
+	</select>
+	
+	<select id="getEmotionCntOfPost" parameterType="Long" resultType="HashMap">
+		select 
+			emotion,
+		    count(*) as cnt
+		from post_user_emotion 
+		where p_id = #{pId}
+		group by emotion
+	</select>
+	
+	<select id="getComments" parameterType="Long" resultType="HashMap">
+		with recursive cte as 
+		(
+			select 
+				cm_id,
+				cm_parent,
+		        cm_content,
+		        cm_good,
+		        cm_bad,
+		        created_at,
+		        updated_at,
+		        deleted_yn,
+		        p_id,
+		        u_id
+			from comment
+			where p_id = #{p_id}
+			and cm_parent = 0
+		    union all
+		    select 
+				A.cm_id,
+				A.cm_parent,
+		        A.cm_content,
+		        A.cm_good,
+		        A.cm_bad,
+		        A.created_at,
+		        A.updated_at,
+		        A.deleted_yn,
+		        A.p_id,
+		        A.u_id
+			from comment A
+		    inner join cte on A.cm_parent = cte.cm_id
+		    where A.p_id = #{p_id}
+		)
+		select 
+			cm_id,
+			cm_parent,
+			cm_content,
+			cm_good,
+			cm_bad,
+			date_format(c.created_at, '%y/%m/%d %H:%i') as created_at,
+			ifnull(date_format(c.updated_at, '%y/%m/%d %H:%i'), 'null') as updated_at,
+			p_id,
+			c.u_id,
+			nick,
+		    c_parent_code as icon_class,
+		    c_content4 as icon_color
+		from cte c
+		inner join user u on (u.u_id = c.u_id)
+		inner join common_code cc on (cc.c_code = u.lv_code)
+		order by cm_id
+	</select>
+	
+	<select id="getPostTitle" resultType="HashMap">
+		select 
+			menu_code,
+		    menu_nm
+		from menu
+		where menu_parent in ('M01', 'M02')
+		and read_only_yn = 'N'
+	</select>
+	
+	<select id="getPostState" parameterType="String" resultType="HashMap">
+		select 
+			ms_code,
+		    ms_nm
+		from menu_state
+		where menu_code = #{menu_code}
+	</select>
+	
+	<insert id="saveFile" parameterType="HashMap" useGeneratedKeys="true" keyProperty="f_id">
+		insert into file (origin_file_nm, stored_file_nm, extension, file_size) 
+		values (#{origin_file_nm}, #{stored_file_nm}, #{extension}, #{file_size})
+	</insert>
+	
+	<update id="modifyFile" parameterType="HashMap">
+		update file
+		set 
+			p_id = #{p_id},
+			submit_yn = #{submit_yn},
+			updated_at = NOW()
+		where f_id = #{f_id}
+	</update>
+	
+	<insert id="savePost" parameterType="HashMap" useGeneratedKeys="true" keyProperty="p_id">
+		insert into post (p_title, p_content, u_id, menu_code, ms_code)
+		values (#{title}, #{content}, #{u_id}, #{postType}, #{postState})
+	</insert>
+	
+	<select id="getFiles" parameterType="Long" resultType="HashMap">
+		select 
+			f_id,
+		    stored_file_nm
+		from file
+		where p_id = #{p_id}
+	</select>
+	
+	<update id="modifyPost" parameterType="HashMap">
+		update post
+		set
+			p_title = #{title}, 
+			p_content = #{content}, 
+			menu_code = #{postType}, 
+			ms_code = #{postState},
+			updated_at = NOW()
+		where p_id = #{pId}
+		and u_id = #{u_id}
+	</update>
+	
+	<update id="removePost" parameterType="HashMap">
+		update post
+		set
+			deleted_yn = 'Y'
+		where p_id = #{pId}
+		and u_id = #{u_id}
+	</update>
+	
+	<update id="removeFile" parameterType="Long">
+		update file
+		set
+			submit_yn = 'X'
+		where p_id = #{p_id}
+	</update>
+	
+	<update id="plusViewCnt" parameterType="Long">
+		update post
+		set
+			p_cnt = p_cnt + 1
+		where p_id = #{p_id}
+	</update>
+	
+	<select id="getPostEmotion" parameterType="HashMap" resultType="String">
+		select 
+			emotion
+		from post_user_emotion
+		where p_id = #{pId}
+		and u_id = #{u_id}
+	</select>
+	
+	<insert id="addPostEmotion" parameterType="HashMap">
+		insert into post_user_emotion (p_id, u_id, emotion)
+		values (#{pId}, #{u_id}, #{emotion})
+	</insert>
+	
+	<update id="plusEmotion" parameterType="HashMap">
+		update post
+		set
+			<if test='emotion.equals("G")'>
+			p_good = p_good + 1
+			</if>
+			<if test='emotion.equals("B")'>
+			p_bad = p_bad + 1
+			</if>
+		where p_id = #{pId}
+	</update>
+	
+	<delete id="removeEmotion" parameterType="HashMap">
+		delete
+		from post_user_emotion
+		where p_id = #{pId}
+		and u_id = #{u_id}
+	</delete>
+	
+	<update id="minusEmotion" parameterType="HashMap">
+		update post
+		set
+			<if test='emotion.equals("G")'>
+			p_good = p_good - 1
+			</if>
+			<if test='emotion.equals("B")'>
+			p_bad = p_bad - 1
+			</if>
+		where p_id = #{pId}
+	</update>
+	
+	
+	<insert id="saveComment" parameterType="HashMap">
+		insert into comment (cm_parent, cm_content, p_id, u_id)
+		values (#{cm_parent}, #{cm_content}, #{p_id}, #{u_id})
+	</insert>
+</mapper>
