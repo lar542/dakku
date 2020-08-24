@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.popol.dakku.modules.web.auth.AuthMapper">
+	
+	<select id="getUserInfo" parameterType="String" resultType="UserVO">
+		select
+			u.u_id,
+			nick,
+			exp,
+			cheer,
+			stamp,
+			u.lv_code,
+			c_parent_code as icon_class,
+			c_content4 as icon_color,
+			c_nm as lv,
+			c_content1 as stored_exp,
+			c_content2 as required_exp
+		from user u
+		inner join common_code c on (c.c_code = u.lv_code)
+		where email = #{email}
+	</select>
+	
+	<insert id="addUser" parameterType="UserVO" useGeneratedKeys="true" keyProperty="u_id">
+		insert into user (sns_type, sns_id, email, nick, lv_code)
+		values (#{sns_type}, #{sns_id}, #{email}, #{nick}, #{lv_code})
+	</insert>
+	
+	<insert id="addRole" parameterType="UserVO">
+		insert into role (role_code, u_id)
+		values 
+		<foreach collection="roles" item="role">
+		(#{role}, #{u_id})
+		</foreach>
+	</insert>
+	
+	<insert id="addAccLog" parameterType="HashMap">
+		insert into acc_log (login_status, login_type, u_id) 
+		values (#{login_status}, #{login_type}, #{u_id})
+	</insert>
+	
+	<select id="getRoles" parameterType="Long" resultType="HashMap">
+		select role_code from role where u_id = #{u_id}
+	</select>
+	
+	<select id="addItem" parameterType="HashMap">
+		insert into inven (u_id, c_code, p_id)
+		values (#{u_id}, #{c_code}, #{p_id})
+	</select>
+	
+</mapper>
