@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{templates/layout/default-layout}">
+	
+	<th:block layout:fragment="custom-css">
+		<link th:href="@{/resources/css/summernote/summernote-bs4.min.css}" rel="stylesheet">
+	</th:block>
+	
+	<th:block layout:fragment="custom-js">
+		<script th:src="@{/resources/js/summernote/summernote-bs4.min.js}"></script>
+		<script th:src="@{/resources/js/summernote/lang/summernote-ko-KR.min.js}"></script>
+		<script th:src="@{/resources/js/custom/post-common.js}"></script>
+		<script type="text/javascript" th:inline="javascript">
+			$(function(){
+				files = /*[[${files}]]*/
+					$('#save').click(function(e){
+						e.preventDefault();
+						var title = $('#title').val().trim();
+						if(title.length == 0 || title.length > 50){
+							alert('제목을 50자 이하까지 입력해주세요 ');
+							return;
+						}
+						var txt = $('#summernote').val().trim();
+						if(txt.length == 0 || txt == '<p><br></p>'){
+							alert('게시글을 입력해주세요');
+							return;
+						}
+						var fileArray = [];
+						for(var i = 0; i < files.length; i++){
+							fileArray.push(files[i].f_id);
+						}
+						$('#postForm').append('<input type="hidden" name="files" value="'+fileArray.join()+'" />');
+						var data = $('#postForm').serializeArray();
+						$.ajax({
+							type: 'POST',
+							data: data,
+							url: /*[[@{/auth/modify/post}]]*/ + '',
+							async: false,
+							traditional : true,
+							success: function(res){
+								location.href = res.redirect;
+							}
+						});
+					});
+			});
+		</script>
+	</th:block>
+	
+	<div class="container-fluid" layout:fragment="content">
+		<!-- Page Heading -->
+		<div class="d-sm-flex align-items-center justify-content-between mb-4">
+			<h1 class="h3 mb-0 text-gray-800">글 수정</h1>
+			<a th:href="@{/auth/post/write/}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-pen fa-sm text-white-50"></i> 글쓰기</a>
+		</div>
+		
+		<!-- Content Row -->
+		<div class="row">
+			<div class="col-lg">
+              <div class="card shadow mb-4">
+              	<form method="post" th:action="@{/auth/modify/post}" id="postForm">
+              		<input type="hidden" name="pId" th:value="${p.p_id}">
+	                <div class="card-header py-3">
+	                  <h6 class="m-0 font-weight-bold text-primary row">
+	                  	<div class="col-sm-3 col-md-3">
+		                  	<select class="form-control" name="postType" id="postType">
+		                  		<th:block th:each="t : ${types}">
+			                  		<option th:value="${t.menu_code}" th:text="${t.menu_nm}" th:selected="${t.menu_code == p.menu_code}"></option>
+		                  		</th:block>
+		                  	</select>
+	                	</div>
+	                	<div class="col-sm-3 col-md-2">
+		                  	<select class="form-control" name="postState" id="postState">
+		                  		<th:block th:each="s : ${states}">
+			                  		<option th:value="${s.ms_code}" th:text="${s.ms_nm}" th:selected="${s.ms_code == p.ms_code}"></option>
+		                  		</th:block>
+		                  	</select>
+	                	</div>
+	                	<div class="col">
+	                		<input type="text" class="form-control" name="title" id="title" placeholder="제목을 입력해주세요" th:value="${p.p_title}">
+	                	</div>
+	                  </h6>
+	                </div>
+	                <div class="card-body">
+						<!-- summernote -->
+						<textarea id="summernote" name="content" th:text="${p.p_content}"></textarea>
+	                </div>
+	                <div class="card-footer">
+	                	<button type="submit" id="save" class="btn btn-sm btn-primary shadow-sm">저장</button>
+	                </div>
+                </form>
+              </div>
+            </div>
+		</div>
+	</div>
+
+</html>

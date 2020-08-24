@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{templates/layout/default-layout}">
+	
+	<th:block layout:fragment="custom-css">
+	</th:block>
+	<th:block layout:fragment="custom-js">
+		<script type="text/javascript">
+			$(function(){
+				$('#search').click(function(){
+					var word = $('#searchWord').val();
+					if(word.trim().length > 0){
+						$('#page').val('');
+						$('#searchForm').submit();
+					} else {
+						alert('검색어를 입력해주세요');
+					}
+				});
+				
+				$('.page-link').click(function(){
+					var page = $(this).attr('data-page');
+					$('#page').val(page);
+					$('#searchForm').submit();
+				});
+				
+				$('.trs').click(function(){
+					var id = $(this).children().first().text();
+					location.href = "/post/" + $('#menuCode').text() + "/" + id;
+				});
+			});
+		</script>
+	</th:block>
+	
+	<div class="container-fluid" layout:fragment="content">
+		<span th:text="${pageinfo.menu_code}" id="menuCode" style="display: none;"></span>
+		<div class="d-sm-flex align-items-center justify-content-between mb-4">
+			<h1 class="h3 mb-0 text-gray-800" th:text=${pageinfo.menu_nm}>게시판 이름</h1>
+			<a th:href="@{/auth/post/write/}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-pen fa-sm text-white-50"></i> 글쓰기</a>
+		</div>
+		
+		<div class="card shadow mb-4">
+			<div class="card-body">
+				<div class="row">
+					<div class="col-sm-12">
+						<div style="text-align: right;">
+							<form th:action="${'/post/list/' + pageinfo.menu_code}" method="get" id="searchForm">
+								<input type="hidden" name="page" id="page" th:value="${pageVO.currentPage}">
+								<label>
+								  <div class="form-row align-items-center">
+									<div class="col-auto my-1">
+									  <select class="form-control form-control-sm" name="searchType" id="searchType">
+										<option value="all">전체</option>
+										<option value="title" th:selected="${pageVO.searchType eq 'title'}">제목</option>
+										<option value="content" th:selected="${pageVO.searchType eq 'content'}">내용</option>
+									  </select>
+									</div>
+									<div class="col-auto my-1">
+									  <input type="search" class="form-control form-control-sm" name="searchWord" id="searchWord" th:value="${pageVO.searchWord}">
+									</div>
+									<div class="col-auto my-1">
+									  <button type="button" class="btn btn-primary btn-sm" id="search"><i class="fas fa-search"></i></button>
+									</div>
+								  </div>
+								</label>
+							</form>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-12">
+						<table class="table table-sm table-hover">
+						  <thead>
+							<tr>
+							  <th scope="col">#</th>
+							  <th scope="col">제목</th>
+							  <th scope="col">작성자</th>
+							  <th scope="col">작성일</th>
+							  <th scope="col"><i class="fas fa-eye text-primary"></i></th>
+							  <th scope="col"><i class="fas fa-heart text-danger"></i></th>
+							</tr>
+						  </thead>
+						  <tbody>
+						  	<tr class="text-center" th:if="${#lists.size(posts) == 0}">
+						  		<td colspan="6">작성된 게시글이 없습니다</td>
+						  	</tr>
+						  	<tr class="trs" th:each="post : ${posts}">
+							  <th scope="row" th:text="${post.p_id}"></th>
+							  <td th:text="${post.ms_nm == 'null'} ? ${post.p_title} : '['+${post.ms_nm}+'] '+${post.p_title}"></td>
+							  <td th:text="${post.nick}"></td>
+							  <td th:text="${post.created_at}"></td>
+							  <td th:text="${post.p_cnt}"></td>
+							  <td th:text="${post.p_good}"></td>
+							</tr>
+						  </tbody>
+						</table>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-12">
+						<nav aria-label="Page navigation example">
+						  <ul class="pagination justify-content-end" 
+						  	th:with="lastPage=(${pageVO.totalPage < pageVO.endPage ? pageVO.totalPage : pageVO.endPage})">
+						  	
+							<li class="page-item" th:classappend="${pageVO.left <= 0} ? 'disabled'">
+							  <a class="page-link" href="#" th:attr="data-page=(${pageVO.left > 0} ? ${pageVO.left})"><span aria-hidden="true">&laquo;</span></a>
+							</li>
+							<li class="page-item" th:each="page : ${#numbers.sequence(pageVO.startPage, lastPage)}" th:classappend="${page == pageVO.currentPage} ? 'active'">
+								<a class="page-link" href="#" th:attr="data-page=${page}" th:text="${page}"></a>
+							</li>
+							<li class="page-item" th:classappend="${pageVO.right <= 0} ? 'disabled'">
+							  <a class="page-link" href="#" th:attr="data-page=(${pageVO.right > 0} ? ${pageVO.right})"><span aria-hidden="true">&raquo;</span></a>
+							</li>
+						  </ul>
+						</nav>
+					</div>
+				</div>
+			</div>            
+		</div>
+		
+	</div>
+	
+</html>
