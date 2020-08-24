@@ -24,6 +24,7 @@ hs_err_pid*
 
 ##############################################################################
 
+# https://www.toptal.com/developers/gitignore
 # Created by https://www.toptal.com/developers/gitignore/api/eclipse
 # Edit at https://www.toptal.com/developers/gitignore?templates=eclipse
 
@@ -36,7 +37,7 @@ tmp/
 *.swp
 *~.nib
 local.properties
-#.settings/
+.settings/
 .loadpath
 .recommenders
 
@@ -72,6 +73,7 @@ local.properties
 
 # STS (Spring Tool Suite)
 .springBeans
+.classpath
 
 # Code Recommenders
 .recommenders/
@@ -87,7 +89,7 @@ local.properties
 
 # Uncomment this line if you wish to ignore the project description file.
 # Typically, this file would be tracked if it contains build/dependency configurations:
-#.project
+.project
 
 ### Eclipse Patch ###
 # Spring Boot Tooling
@@ -97,5 +99,9 @@ local.properties
 
 ## additional ##
 *.properties
+target/
 src/test/
 keystore.p12
+
+# 부트스트랩 임시로 올려논 것 #
+/src/main/webapp/resources/ui/
