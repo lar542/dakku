@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar" th:fragment="left">
+  <!-- Sidebar - Brand -->
+  <a class="sidebar-brand d-flex align-items-center justify-content-center" th:href="@{/}">
+    <div class="sidebar-brand-icon rotate-n-15">
+      <i class="fas fa-laugh-wink"></i>
+    </div>
+    <div class="sidebar-brand-text mx-3">DAKKU <sup>다꾸</sup></div>
+  </a>
+
+  <!-- Divider -->
+  <hr class="sidebar-divider my-0">
+
+  <!-- Nav Item - Dashboard -->
+  <li class="nav-item active">
+    <a class="nav-link" th:href="@{/}">
+      <i class="fas fa-home"></i>
+      <span>Home</span></a>
+  </li>
+
+	<th:block th:each="entry : ${menuList}">
+		
+		<hr class="sidebar-divider" th:if="${entryStat.odd}">
+	
+		<li class="nav-item" th:if="${#lists.size(entry.value.subs) > 0 }">
+			<a class="nav-link collapsed" data-toggle="collapse" aria-expanded="false" href="#"
+				th:attr="data-target=${'#collapse' + entry.value.menu_code}, aria-controls=${'collapse' + entry.value.menu_code}">
+				
+				<i class="fas" th:classappend="${entry.value.menu_class}"></i>
+				<span th:text="${entry.value.menu_nm}"></span>
+			</a>
+			<div class="collapse" data-parent="#accordionSidebar"
+				th:id="${'collapse' + entry.value.menu_code}" th:attr="aria-labelledby=${'heading' + entry.value.menu_code}">
+				<div class="bg-white py-2 collapse-inner rounded">
+					<h6 class="collapse-header" th:text="${entry.value.menu_nm} + ':'"></h6>
+					<th:block th:each="m : ${entry.value.subs}">
+						<a class="collapse-item" th:href="@{${m.menu_url} + '/' + ${m.menu_code}}" th:text="${m.menu_nm}"></a>
+					</th:block>
+				</div>
+			</div>
+		</li>
+		
+		<li class="nav-item" th:unless="${#lists.size(entry.value.subs) > 0}">
+	    	<a class="nav-link" th:href="@{${entry.value.menu_url} + '/' + ${entry.value.menu_code}}">
+			    <i class="fas" th:classappend="${entry.value.menu_class}"></i>
+			    <span th:text="${entry.value.menu_nm}"></span>
+		    </a>
+	  	</li>
+	</th:block>
+
+
+  <!-- Divider -->
+  <hr class="sidebar-divider d-none d-md-block">
+
+  <!-- Sidebar Toggler (Sidebar) -->
+  <div class="text-center d-none d-md-inline">
+    <button class="rounded-circle border-0" id="sidebarToggle"></button>
+  </div>
+
+</ul>
+
+</html>
