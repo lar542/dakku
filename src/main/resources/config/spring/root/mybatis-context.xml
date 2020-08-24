@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+	
+	<!-- JDBC나 MyBatis와 같이 JDBC로  DB 연동을 처리하는 경우 트랜잭션을 사용하기 위한  TransactionManager -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<!-- 스프링의 DB 관련 기능과  MyBatis 연동 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="mapperLocations" value="classpath:/com/popol/dakku/modules/web/**/*.xml" />
+		<property name="typeAliases">
+			<list>
+				<value>com.popol.dakku.modules.commons.auth.vo.UserVO</value>
+				<value>com.popol.dakku.modules.commons.vo.PaginationInfoVO</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- (중요) 빈 의존성에 따라 순서대로 빈을 생성 : 매퍼 -> 서비스와 컨트롤러같은 빈 -> 설정파일에 의존한 빈 -> 설정 파일 -->	
+	<!-- 다수의 매퍼 인터페이스를 검색해서 빈으로 등록 -->
+	<mybatis:scan base-package="com.popol.dakku.modules.web" factory-ref="sqlSessionFactory" />
+	
+</beans>
