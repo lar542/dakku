@@ -100,7 +100,7 @@
 				<div class="row">
 					<div class="col-sm-12">
 						<nav aria-label="Page navigation example">
-						  <ul class="pagination justify-content-end" 
+						  <ul class="pagination justify-content-end" th:if="${pageVO.totalPage > 0}" 
 						  	th:with="lastPage=(${pageVO.totalPage < pageVO.endPage ? pageVO.totalPage : pageVO.endPage})">
 						  	
 							<li class="page-item" th:classappend="${pageVO.left <= 0} ? 'disabled'">

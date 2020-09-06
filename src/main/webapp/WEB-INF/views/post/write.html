@@ -12,39 +12,7 @@
 		<script th:src="@{/resources/js/summernote/summernote-bs4.min.js}"></script>
 		<script th:src="@{/resources/js/summernote/lang/summernote-ko-KR.min.js}"></script>
 		<script th:src="@{/resources/js/custom/post-common.js}"></script>
-		<script type="text/javascript" th:inline="javascript">
-			$(function(){
-				$('#save').click(function(e){
-					e.preventDefault();
-					var title = $('#title').val().trim();
-					if(title.length == 0 || title.length > 50){
-						alert('제목을 50자 이하까지 입력해주세요 ');
-						return;
-					}
-					var txt = $('#summernote').val().trim();
-					if(txt.length == 0 || txt == '<p><br></p>'){
-						alert('게시글을 입력해주세요');
-						return;
-					}
-					var fileArray = [];
-					for(var i = 0; i < files.length; i++){
-						fileArray.push(files[i].f_id);
-					}
-					$('#postForm').append('<input type="hidden" name="files" value="'+fileArray.join()+'" />');
-					var data = $('#postForm').serializeArray();
-					$.ajax({
-						type: 'POST',
-						data: data,
-						url: /*[[@{/auth/save/post}]]*/ + '',
-						async: false,
-						traditional : true,
-						success: function(res){
-							location.href = res.redirect;
-						}
-					});
-				});
-			});
-		</script>
+		<script th:src="@{/resources/js/custom/file-common.js}"></script>
 	</th:block>
 	
 	<div class="container-fluid" layout:fragment="content">
