@@ -28,6 +28,7 @@ import com.popol.dakku.modules.commons.auth.UserDetailsHelper;
 import com.popol.dakku.modules.commons.auth.vo.UserVO;
 import com.popol.dakku.modules.commons.consts.VarConsts;
 import com.popol.dakku.modules.commons.util.FileUtil;
+import com.popol.dakku.modules.commons.util.HtmlUtil;
 import com.popol.dakku.modules.commons.vo.PaginationInfoVO;
 
 @Controller
@@ -59,25 +60,20 @@ public class PostController {
 		//게시글
 		Map post = postMapper.getPost(postId);
 		model.addAttribute("p", post);
-		//게시글의 좋아요/싫어요 카운트
-//		List<Map> emotionResults = postMapper.getEmotionCntOfPost(postId);
-//		for (Map map : emotionResults) {
-//			post.put(map.get("emotion"), map.get("cnt"));
-//		}
 		//로그인 상태일 때 이미 게시글에 좋아요/싫어요 했는지
 		model.addAttribute("alreadyEmotion", "null");
 		Object obj = UserDetailsHelper.getAuthenticatedUser();
+		Map params = new HashMap<String, Object>();
+		params.put("u_id", null);
+		params.put("pId", postId);
 		if(obj != null) {
 			UserVO userVO = (UserVO) obj;
-			Map params = new HashMap<String, Object>();
 			params.put("u_id", userVO.getU_id());
-			params.put("pId", postId);
 			String alreadyEmotion = postMapper.getPostEmotion(params);
 			model.addAttribute("alreadyEmotion", alreadyEmotion + "");
 		}
-		
 		//댓글
-		List<Map> comments = postMapper.getComments(postId);
+		List<Map> comments = postMapper.getComments(params);
 		model.addAttribute("comments", comments);
 		//게시글 목록
 		addAttr(menuCode, req, model);
@@ -146,13 +142,14 @@ public class PostController {
 	@RequestMapping(value = "/upload/img", method = RequestMethod.POST, produces = "application/json")
 	@ResponseBody
 	public Map uploadImage(@RequestParam("file") MultipartFile multipartFile, HttpServletRequest req) throws Exception {
+		//실제 파일 업로드
 		Map params = new HashMap<String, Object>();
 		String[] extensions = {".jpg",".jpeg",".png",".gif"};
 		params.put("extensions", extensions);
 		params.put("upload_path", VarConsts.SUMMERNOTE_UPLOAD_PATH);
 		params.put("url", req.getContextPath() + VarConsts.SUMMERNOTE_URL);
 		Map fileMap = FileUtil.uploadFile(multipartFile, params);
-		
+		//파일 정보 저장
 		Map<String, Object> result = new HashMap<String, Object>();
 		result.put("resultCode", fileMap.get("resultCode"));
 		if(fileMap.get("resultCode").toString().equals("success")) {
@@ -160,22 +157,9 @@ public class PostController {
 			result.put("stored_file_nm", fileMap.get("stored_file_nm"));
 			result.put("url", fileMap.get("url"));
 			result.put("f_id", fileMap.get("f_id"));
+			result.put("deleted", "N");
 		}
 		return result;
-	}
-	
-	@PostMapping(value = "/delete/img", produces = "application/json")
-	@ResponseBody
-	public Map uploadImageDelete(@RequestParam Map param) {
-		String storedFilePath = VarConsts.SUMMERNOTE_UPLOAD_PATH + param.get("stored_file_nm").toString();
-		Map resultMap = FileUtil.deleteFile(storedFilePath);
-		
-		if(resultMap.get("resultCode").toString().equals("success")) {
-			resultMap.put("submit_yn", "X");
-			resultMap.put("f_id", param.get("f_id"));
-			postMapper.modifyFile(resultMap);
-		}
-		return resultMap;
 	}
 	
 	@PostMapping(value = "/auth/save/post")
@@ -185,13 +169,20 @@ public class PostController {
 		UserVO userVO = (UserVO) UserDetailsHelper.getAuthenticatedUser();
 		params.put("u_id", userVO.getU_id());
 		postMapper.savePost(params);
-		//파일 상태 정보 변경, 파일의 게시글 번호 업데이트
+		//파일 상태 정보 변경
 		if(ObjectUtils.isNotEmpty(params.get("files"))) {
-			params.put("submit_yn", "Y");
 			String[] files = params.get("files").toString().split(",");
+			params.put("type_id", "P" + params.get("p_id"));
 			for (String file : files) {
-				params.put("f_id", file);
-				params.put("p_id", params.get("p_id"));
+				String[] f = file.split(":");
+				if(f[1].equals("Y")) { //deleted
+					params.put("submit_yn", "X");
+					//실제 파일 삭제
+					FileUtil.deleteFile(VarConsts.SUMMERNOTE_UPLOAD_PATH + f[2]);
+				} else {
+					params.put("submit_yn", "Y");
+				}
+				params.put("f_id", f[0]);
 				postMapper.modifyFile(params);
 			}
 		}
@@ -203,9 +194,10 @@ public class PostController {
 	@PostMapping("/auth/post/get")
 	public String writeModify(@RequestParam Long pId, Model model) {
 		Map post = postMapper.getPost(pId);
-		List<Map> files = postMapper.getFiles(pId);
+		List<Map> files = postMapper.getFiles("P" + pId);
 		for (Map file : files) {
 			file.put("url", VarConsts.SUMMERNOTE_URL + file.get("stored_file_nm"));
+			file.put("deleted", "N");
 		}
 		model.addAttribute("p", post);
 		model.addAttribute("files", files);
@@ -221,13 +213,20 @@ public class PostController {
 		UserVO userVO = (UserVO) UserDetailsHelper.getAuthenticatedUser();
 		params.put("u_id", userVO.getU_id());
 		postMapper.modifyPost(params);
-		//파일 상태 정보 변경, 파일의 게시글 번호 업데이트
+		//파일 상태 정보 변경
 		if(ObjectUtils.isNotEmpty(params.get("files"))) {
-			params.put("submit_yn", "Y");
 			String[] files = params.get("files").toString().split(",");
+			params.put("type_id", "P" + params.get("pId"));
 			for (String file : files) {
-				params.put("f_id", file);
-				params.put("p_id", params.get("pId"));
+				String[] f = file.split(":");
+				if(f[1].equals("Y")) { //deleted
+					params.put("submit_yn", "X");
+					//실제 파일 삭제
+					FileUtil.deleteFile(VarConsts.SUMMERNOTE_UPLOAD_PATH + f[2]);
+				} else {
+					params.put("submit_yn", "Y");
+				}
+				params.put("f_id", f[0]);
 				postMapper.modifyFile(params);
 			}
 		}
@@ -243,9 +242,9 @@ public class PostController {
 		//게시글 삭제
 		postMapper.removePost(params);
 		//파일 상태 정보 변경, 실제 파일 삭제
-		List files = postMapper.getFiles(Long.parseLong(params.get("pId").toString()));
+		List files = postMapper.getFiles("P" + params.get("pId"));
 		if(files.size() > 0) {
-			postMapper.removeFile(Long.parseLong(params.get("pId").toString()));
+			postMapper.removeFile("P" + params.get("pId"));
 			FileUtil.deleteFiles(files);
 		}
 		return "redirect:/post/list/" + params.get("menuCode");
@@ -276,12 +275,147 @@ public class PostController {
 				result.put("emotion", alreadyEmotion);
 			}
 		}
-		List<Map> emotionResults = postMapper.getEmotionCntOfPost(Long.parseLong(params.get("pId").toString()));
-		result.put("G", 0);
-		result.put("B", 0);
-		for (Map map : emotionResults) {
-			result.put(map.get("emotion"), map.get("cnt"));
+		Map post = postMapper.getPost(Long.parseLong(params.get("pId").toString()));
+		result.put("G", post.get("p_good"));
+		result.put("B", post.get("p_bad"));
+		return result;
+	}
+	
+	@PostMapping(value = "/auth/save/comment", produces = "application/json;charset=utf8")
+	@ResponseBody
+	public Map saveComment(@RequestParam Map params) {
+		UserVO userVO = (UserVO) UserDetailsHelper.getAuthenticatedUser();
+		params.put("u_id", userVO.getU_id());
+		if(!params.containsKey("cmParent")) {
+			params.put("cmParent", 0);
 		}
+		postMapper.saveComment(params);
+		//파일 상태 정보 변경
+		if(ObjectUtils.isNotEmpty(params.get("files"))) {
+			String[] files = params.get("files").toString().split(",");
+			params.put("type_id", "C" + params.get("cm_id"));
+			for (String file : files) {
+				String[] f = file.split(":");
+				if(f[1].equals("Y")) { //deleted
+					params.put("submit_yn", "X");
+					//실제 파일 삭제
+					FileUtil.deleteFile(VarConsts.SUMMERNOTE_UPLOAD_PATH + f[2]);
+				} else {
+					params.put("submit_yn", "Y");
+				}
+				params.put("f_id", f[0]);
+				postMapper.modifyFile(params);
+			}
+		}
+		List comments = postMapper.getComments(params);
+		String html = HtmlUtil.comments(comments, params.get("pId").toString(), params.get("u_id").toString());
+		Map result = new HashMap<String, Object>();
+		result.put("cmtCnt", comments.size());
+		result.put("html", html);
+		return result;
+	}
+	
+	@PostMapping(value = "/auth/get/comment", produces = "application/json;charset=utf8")
+	@ResponseBody
+	public Map modifyComment(@RequestParam Long cmId) {
+		Map params = new HashMap<String, Object>();
+		params.put("cmId", cmId);
+		UserVO userVO = (UserVO) UserDetailsHelper.getAuthenticatedUser();
+		params.put("u_id", userVO.getU_id());
+		Map comment = postMapper.getComment(params);
+		comment.put("resultCode", "fail");
+		if (!comment.isEmpty()) {
+			comment.put("resultCode", "success");
+			List<Map> files = postMapper.getFiles("C" + cmId);
+			for (Map file : files) {
+				file.put("url", VarConsts.SUMMERNOTE_URL + file.get("stored_file_nm"));
+				file.put("deleted", "N");
+			}
+			comment.put("files", files);
+		}
+		return comment;
+	}
+	
+	@PostMapping(value = "/auth/modify/comment", produces = "application/json;charset=utf8")
+	@ResponseBody
+	public Map modifyComment(@RequestParam Map params) {
+		UserVO userVO = (UserVO) UserDetailsHelper.getAuthenticatedUser();
+		params.put("u_id", userVO.getU_id());
+		postMapper.modifyComment(params);
+		//파일 상태 정보 변경
+		if(ObjectUtils.isNotEmpty(params.get("files"))) {
+			String[] files = params.get("files").toString().split(",");
+			params.put("type_id", "C" + params.get("cmId"));
+			for (String file : files) {
+				String[] f = file.split(":");
+				if(f[1].equals("Y")) { //deleted
+					params.put("submit_yn", "X");
+					//실제 파일 삭제
+					FileUtil.deleteFile(VarConsts.SUMMERNOTE_UPLOAD_PATH + f[2]);
+				} else {
+					params.put("submit_yn", "Y");
+				}
+				params.put("f_id", f[0]);
+				postMapper.modifyFile(params);
+			}
+		}
+		List comments = postMapper.getComments(params);
+		String html = HtmlUtil.comments(comments, params.get("pId").toString(), params.get("u_id").toString());
+		Map result = new HashMap<String, Object>();
+		result.put("cmtCnt", comments.size());
+		result.put("html", html);
+		return result;
+	}
+	
+	@PostMapping(value = "/auth/remove/comment", produces = "application/json;charset=utf8")
+	@ResponseBody
+	public Map removeComment(@RequestParam Map params) {
+		UserVO userVO = (UserVO) UserDetailsHelper.getAuthenticatedUser();
+		params.put("u_id", userVO.getU_id());
+		postMapper.removeComment(params);
+		//파일 상태 정보 변경
+		List files = postMapper.getFiles("C" + params.get("cmId"));
+		if(files.size() > 0) {
+			postMapper.removeFile("C" + params.get("cmId"));
+			FileUtil.deleteFiles(files);
+		}
+		List comments = postMapper.getComments(params);
+		String html = HtmlUtil.comments(comments, params.get("pId").toString(), params.get("u_id").toString());
+		Map result = new HashMap<String, Object>();
+		result.put("cmtCnt", comments.size());
+		result.put("html", html);
+		return result;
+	}
+	
+	@PostMapping("/auth/cmtemotion")
+	@ResponseBody
+	public Map cmtemotion(@RequestParam Map params) {
+		Map result = new HashMap<String, Object>();
+		String emotionChk = params.get("emotion").toString();
+		if(!(emotionChk.equals("G") || emotionChk.equals("B"))) {
+			result.put("emotion", "N");
+			return result;
+		}
+		UserVO userVO = (UserVO) UserDetailsHelper.getAuthenticatedUser();
+		params.put("u_id", userVO.getU_id());
+		String alreadyEmotion = postMapper.getCommentEmotion(params);
+		if(alreadyEmotion == null) {
+			postMapper.plusCommentEmotion(params);
+			postMapper.addCommentEmotion(params);
+			result.put("emotion", "A");
+		} else {
+			if(emotionChk.equals(alreadyEmotion)) {
+				postMapper.minusCommentEmotion(params);
+				postMapper.removeCommentEmotion(params);
+				result.put("emotion", "C");
+			} else {
+				result.put("emotion", alreadyEmotion);
+			}
+		}
+		List comments = postMapper.getComments(params);
+		String html = HtmlUtil.comments(comments, params.get("pId").toString(), params.get("u_id").toString());
+		result.put("cmtCnt", comments.size());
+		result.put("html", html);
 		return result;
 	}
 }

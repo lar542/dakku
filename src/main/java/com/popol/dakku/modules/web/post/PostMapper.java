@@ -28,16 +28,6 @@ public interface PostMapper {
 	public Map getPost(Long p_id);
 	
 	/**
-	 * 게시글의 좋아요/싫어요 조회
-	 */
-	public List getEmotionCntOfPost(Long p_id);
-	
-	/**
-	 * 게시글의 댓글 조회 
-	 */
-	public List getComments(Long p_id);
-	
-	/**
 	 * 게시글 종류 조회
 	 */
 	public List getPostTitle();
@@ -62,14 +52,19 @@ public interface PostMapper {
 	public void modifyFile(Map map);
 	
 	/**
+	 * 파일 삭제
+	 */
+	public void removeFile(String type_id);
+	
+	/**
 	 * 게시글 추가
 	 */
 	public void savePost(Map map);
 	
 	/**
-	 * 해당 게시글의 파일 목록 
+	 * 파일 목록 조회 
 	 */
-	public List getFiles(Long p_id);
+	public List getFiles(String type_id);
 	
 	/**
 	 * 게시글 수정
@@ -80,11 +75,6 @@ public interface PostMapper {
 	 * 게시글 삭제
 	 */
 	public void removePost(Map map);
-	
-	/**
-	 * 파일 삭제
-	 */
-	public void removeFile(Long p_id);
 	
 	/**
 	 * 조회수 증가
@@ -110,8 +100,45 @@ public interface PostMapper {
 	public void minusEmotion(Map map);
 	
 	/**
+	 * 댓글 목록 조회
+	 */
+	public List getComments(Map map);
+	
+	/**
+	 * 댓글 조회
+	 */
+	public Map getComment(Map map);
+	
+	/**
 	 * 댓글 추가
 	 */
 	public void saveComment(Map map);
 	
+	/**
+	 * 댓글 수정
+	 */
+	public void modifyComment(Map map);
+	
+	/**
+	 * 댓글 삭제 
+	 */
+	public void removeComment(Map map);
+	
+	/**
+	 * 댓글 평가 여부
+	 * 댓글 하나당 평가 1개 가능
+	 */
+	public String getCommentEmotion(Map map);
+	
+	/**
+	 * 댓글 평가
+	 */
+	public void addCommentEmotion(Map map);
+	public void plusCommentEmotion(Map map);
+	
+	/**
+	 * 댓글 평가 취소
+	 */
+	public void removeCommentEmotion(Map map);
+	public void minusCommentEmotion(Map map);
 }

@@ -94,67 +94,6 @@
 		and p.deleted_yn = 'N'
 	</select>
 	
-	<select id="getEmotionCntOfPost" parameterType="Long" resultType="HashMap">
-		select 
-			emotion,
-		    count(*) as cnt
-		from post_user_emotion 
-		where p_id = #{pId}
-		group by emotion
-	</select>
-	
-	<select id="getComments" parameterType="Long" resultType="HashMap">
-		with recursive cte as 
-		(
-			select 
-				cm_id,
-				cm_parent,
-		        cm_content,
-		        cm_good,
-		        cm_bad,
-		        created_at,
-		        updated_at,
-		        deleted_yn,
-		        p_id,
-		        u_id
-			from comment
-			where p_id = #{p_id}
-			and cm_parent = 0
-		    union all
-		    select 
-				A.cm_id,
-				A.cm_parent,
-		        A.cm_content,
-		        A.cm_good,
-		        A.cm_bad,
-		        A.created_at,
-		        A.updated_at,
-		        A.deleted_yn,
-		        A.p_id,
-		        A.u_id
-			from comment A
-		    inner join cte on A.cm_parent = cte.cm_id
-		    where A.p_id = #{p_id}
-		)
-		select 
-			cm_id,
-			cm_parent,
-			cm_content,
-			cm_good,
-			cm_bad,
-			date_format(c.created_at, '%y/%m/%d %H:%i') as created_at,
-			ifnull(date_format(c.updated_at, '%y/%m/%d %H:%i'), 'null') as updated_at,
-			p_id,
-			c.u_id,
-			nick,
-		    c_parent_code as icon_class,
-		    c_content4 as icon_color
-		from cte c
-		inner join user u on (u.u_id = c.u_id)
-		inner join common_code cc on (cc.c_code = u.lv_code)
-		order by cm_id
-	</select>
-	
 	<select id="getPostTitle" resultType="HashMap">
 		select 
 			menu_code,
@@ -180,10 +119,19 @@
 	<update id="modifyFile" parameterType="HashMap">
 		update file
 		set 
-			p_id = #{p_id},
+			<if test="type_id != null">
+			type_id = #{type_id},
+			</if>
 			submit_yn = #{submit_yn},
 			updated_at = NOW()
 		where f_id = #{f_id}
+	</update>
+	
+	<update id="removeFile" parameterType="String">
+		update file
+		set
+			submit_yn = 'X'
+		where type_id = #{type_id}
 	</update>
 	
 	<insert id="savePost" parameterType="HashMap" useGeneratedKeys="true" keyProperty="p_id">
@@ -191,12 +139,13 @@
 		values (#{title}, #{content}, #{u_id}, #{postType}, #{postState})
 	</insert>
 	
-	<select id="getFiles" parameterType="Long" resultType="HashMap">
+	<select id="getFiles" parameterType="String" resultType="HashMap">
 		select 
 			f_id,
 		    stored_file_nm
 		from file
-		where p_id = #{p_id}
+		where type_id = #{type_id}
+		and submit_yn = 'Y'
 	</select>
 	
 	<update id="modifyPost" parameterType="HashMap">
@@ -217,13 +166,6 @@
 			deleted_yn = 'Y'
 		where p_id = #{pId}
 		and u_id = #{u_id}
-	</update>
-	
-	<update id="removeFile" parameterType="Long">
-		update file
-		set
-			submit_yn = 'X'
-		where p_id = #{p_id}
 	</update>
 	
 	<update id="plusViewCnt" parameterType="Long">
@@ -277,9 +219,117 @@
 		where p_id = #{pId}
 	</update>
 	
+	<select id="getComments" parameterType="HashMap" resultType="HashMap">
+		SELECT  
+			dc.cm_id, 
+		    cm_parent,
+		    cm_content,
+		    cm_good,
+		    cm_bad,
+		    date_format(dc.created_at, '%y/%m/%d %H:%i') as created_at,
+		    ifnull(date_format(dc.updated_at, '%y/%m/%d %H:%i'), 'null') as updated_at,
+		    dc.deleted_yn,
+		    p_id,
+		    dc.u_id,
+		    nick,
+			c_parent_code as icon_class,
+			c_content4 as icon_color
+			<if test="u_id != null">
+			, ifnull(emotion, 'null') as emotion
+			</if>
+		FROM    (
+		        SELECT  fnc_comment_hierarchi(cm_id) AS cm_id
+		        FROM    (
+		                SELECT  @start_with := '',
+		                        @cm_id := @start_with
+		                ) vars, comment
+		        WHERE   @cm_id IS NOT NULL
+		        ) dc2
+		JOIN    comment dc ON dc.cm_id = dc2.cm_id
+		inner	join user u on (u.u_id = dc.u_id)
+		inner	join common_code cc on (cc.c_code = u.lv_code)
+		<if test="u_id != null">
+		left outer join comment_user_emotion cue on (cue.u_id = #{u_id} and cue.cm_id = dc.cm_id)
+		</if>
+		where	dc.p_id = #{pId}
+	</select>
 	
-	<insert id="saveComment" parameterType="HashMap">
+	<select id="getComment" parameterType="HashMap" resultType="HashMap">
+		select 
+			p_id,
+			cm_id,
+			cm_parent,
+			cm_content,
+			cm_good,
+			cm_bad
+		from comment
+		where cm_id = ${cmId}
+		and u_id = ${u_id}
+	</select>
+	
+	<insert id="saveComment" parameterType="HashMap" useGeneratedKeys="true" keyProperty="cm_id">
 		insert into comment (cm_parent, cm_content, p_id, u_id)
-		values (#{cm_parent}, #{cm_content}, #{p_id}, #{u_id})
+		values (#{cmParent}, #{cmContent}, #{pId}, #{u_id})
 	</insert>
+	
+	<update id="modifyComment" parameterType="HashMap">
+		update comment
+		set
+			cm_content = #{cmContent},
+			updated_at = NOW()
+		where cm_id = #{cmId}
+		and u_id = #{u_id} 
+	</update>
+	
+	<update id="removeComment" parameterType="HashMap">
+		update comment
+		set
+			deleted_yn = 'Y'
+		where cm_id = #{cmId}
+		and u_id = #{u_id}
+	</update>
+	
+	<select id="getCommentEmotion" parameterType="HashMap" resultType="String">
+		select
+			emotion
+		from comment_user_emotion
+		where cm_id = #{cmId}
+		and u_id = #{u_id}
+	</select>
+	
+	<update id="addCommentEmotion" parameterType="HashMap">
+		insert into comment_user_emotion (cm_id, u_id, emotion)
+		values (#{cmId}, #{u_id}, #{emotion})
+	</update>
+	
+	<update id="plusCommentEmotion" parameterType="HashMap">
+		update comment
+		set
+			<if test='emotion.equals("G")'>
+			cm_good = cm_good + 1
+			</if>
+			<if test='emotion.equals("B")'>
+			cm_bad = cm_bad + 1
+			</if>
+		where cm_id = #{cmId}
+	</update>
+	
+	<delete id="removeCommentEmotion" parameterType="HashMap">
+		delete
+		from comment_user_emotion
+		where cm_id = #{cmId}
+		and u_id = #{u_id}
+	</delete>
+	
+	<update id="minusCommentEmotion" parameterType="HashMap">
+		update comment
+		set
+			<if test='emotion.equals("G")'>
+			cm_good = cm_good - 1
+			</if>
+			<if test='emotion.equals("B")'>
+			cm_bad = cm_bad - 1
+			</if>
+		where cm_id = #{cmId}
+	</update>
 </mapper>

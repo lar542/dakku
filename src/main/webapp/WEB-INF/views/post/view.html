@@ -5,122 +5,14 @@
 	layout:decorate="~{templates/layout/default-layout}">
 	
 	<th:block layout:fragment="custom-css">
-		<style>
-			.c-row {
-				line-height: 50px;
-			}
-			.c-icon {
-				position: absolute;top: 15px;left: 25px;
-			}
-			.c-nick {
-				padding: 0 0 0 50px;
-			}
-			.c-heart {
-				float: right; width: 160px;
-			}
-			.c-content {
-				padding: 0 20px;
-			}
-			.c-date {
-				font-size: 12px; color: gray;
-			}
-			.cc-comment {
-				margin: 20px 0 0 0; padding: 0 0 0 35px;
-			}
-			.cc-icon-arrow {
-				position: relative;top: 4px;left: -20px;
-			}
-			.cc-icon {
-				position: absolute;top: 15px;left: 39px;
-			}
-			.cc-nick {
-				padding: 0 0 0 26px;
-			}
-			.c-txtarea {
-				margin: 25px 0 0 0; padding: 10px;
-			}
-			.btn-block-100 {
-				display: block; width: 100%; height: 100%;
-			}
-		</style>
+		<link th:href="@{/resources/css/custom/post-view.css}" rel="stylesheet" type="text/css">
+		<link th:href="@{/resources/css/summernote/summernote-bs4.min.css}" rel="stylesheet">
 	</th:block>
 	<th:block layout:fragment="custom-js">
-		<script type="text/javascript">
-			$(function(){
-				$('#search').click(function(){
-					var word = $('#searchWord').val();
-					if(word.trim().length > 0){
-						$('#page').val('');
-						$('#searchForm').submit();
-					} else {
-						alert('검색어를 입력해주세요');
-					}
-				});
-				
-				$('.page-link').click(function(){
-					var page = $(this).attr('data-page');
-					$('#page').val(page);
-					$('#searchForm').submit();
-				});
-				
-				$('.trs').click(function(){
-					var id = $(this).children().first().text();
-					var action = $('#searchForm').attr('action');
-					var index = action.lastIndexOf('/') + 1;
-					var newAction = action.substring(0, index) + id;
-					$('#searchForm').attr('action', newAction);
-					$('#searchForm').submit();
-				});
-				
-				$('#removePostBtn').click(function(){
-					if(confirm('삭제하시겠습니까?')){
-						$(this).parent('form').submit();
-					}
-				});
-				
-				$('.emotion').click(function(e){
-					e.preventDefault();
-					var state = $(this).attr('data-state');
-					if(!(state == 'G' || state == 'B')){
-						alert('잘못된 요청입니다!');
-						return;
-					}
-					var btn = $(this);
-					$('#emotion').val(state);
-					var data = $(this).parent('form').serializeArray();
-					$.ajax({
-						type: 'POST',
-						url: $(this).parent('form').attr('action'),
-						data : data,
-						success: function(res){
-							if(res.emotion == 'G'){
-								alert('이미 좋아요 표시한 게시글 입니다. 좋아요를 취소해주세요.');
-							} else if(res.emotion == 'B'){
-								alert('이미 싫어요 표시한 게시글 입니다. 싫어요를 취소해주세요.');
-							} else if(res.emotion == 'A') {
-								btn.addClass('btn-lg');
-							} else if(res.emotion == 'C') {
-								btn.removeClass('btn-lg');
-							} else if(res.emotion == 'N'){
-								alert('잘못된 요청 입니다!');
-							}
-							$('#goodCnt').text(res.G);
-							$('#badCnt').text(res.B);
-						}
-					});
-				});
-				
-				$('#commentTxt').on('click keydown', function(){
-					
-				});
-				
-				$('.btn-block-100').click(function(){
-					if(confirm('등록하시겠습니까?')){
-						
-					}
-				});
-			});
-		</script>
+		<script th:src="@{/resources/js/summernote/summernote-bs4.min.js}"></script>
+		<script th:src="@{/resources/js/summernote/lang/summernote-ko-KR.min.js}"></script>
+		<script th:src="@{/resources/js/custom/post-view.js}"></script>
+		<script th:src="@{/resources/js/custom/file-common.js}"></script>
 	</th:block>
 	
 	<div class="container-fluid" layout:fragment="content">
@@ -132,7 +24,6 @@
      
 		<div class="row">
 			<div class="col">
-				<!-- p -->
 				<div class="card shadow mb-4">
 					<div class="card-header py-3">
 					  <h6 class="m-0 font-weight-bold text-primary text-right">
@@ -142,7 +33,7 @@
 					<div class="card-body">
 						<div class="row">
 							<div class="col">
-								<h5 class="card-title" th:text="${p.ms_nm == 'null'} ? ${p.p_title} : '['+${p.ms_nm}+'] '+${p.p_title}">게시글 제목</h5>
+								<h5 class="card-title">#<span th:text="${p.p_id}" id="pId">글번호</span>&nbsp;&nbsp;<span th:text="${p.ms_nm == 'null'} ? ${p.p_title} : '['+${p.ms_nm}+'] '+${p.p_title}">게시글 제목</span></h5>
 								<div class="row dropdown no-arrow">
 									<a class="nav-link dropdown-toggle" href="#" id="postDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 										<p>
@@ -177,12 +68,6 @@
 					<th:block sec:authorize="isAuthenticated()">
 						<div class="card-footer" th:if="${p.u_id == #authentication.principal.attributes.uId}">
 							<div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-								<div class="btn-group mr-2" role="group" aria-label="First group">
-									<form th:action="@{/auth/post/scrape}" method="post">
-										<input type="hidden" name="pId" th:value="${p.p_id}">
-										<button type="submit" class="btn btn-sm btn-primary shadow-sm"><i class="fas fa-bookmark fa-sm text-white-50"></i> 스크랩</button>
-									</form>
-								</div>
 								<div class="btn-group mr-2" role="group" aria-label="Second group">
 									<form th:action="@{/auth/post/get}" method="post">
 										<input type="hidden" name="pId" th:value="${p.p_id}">
@@ -212,84 +97,117 @@
 				<!-- Comments -->
 				<div class="card shadow mb-4">
 					<a href="#collapseCardExample" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="collapseCardExample">
-					  <h6 class="m-0 font-weight-bold text-primary">총 <span class="text-info" th:text="${#lists.size(comments)}"></span>개의 댓글</h6>
+					  <h6 class="m-0 font-weight-bold text-primary">총 <span class="text-info" id="cmtCnt" th:text="${#lists.size(comments)}"></span>개의 댓글 </h6>
 					</a>
 					<div class="collapse show" id="collapseCardExample">
 					  <div class="card-body">
-						<th:block th:each="c : ${comments}">
-							<div th:if="${c.cm_parent == 0}">
-								<!-- 본댓글 작성자 정보 -->
-								<div class="row dropdown no-arrow c-row">
-									<a class="nav-link dropdown-toggle col-sm-6 col-md-8 col-lg-10 col-xl-10" href="#" th:id="'commentDropdown'+${c.cm_id}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-										<i class="fas fa-2x c-icon" th:classappend="'fa-'+${c.icon_class}" th:style="'color:'+ ${c.icon_color}"></i>
-										<span class="c-nick" th:text="${c.nick}">댓글닉</span>
-										<span class="bg-primary text-light text-xs" th:if="${p.u_id == c.u_id}">작성자</span>
-									</a>
-									<div class="dropdown-menu shadow" th:attr="aria-labelledby='commentDropdown'+${c.cm_id}">
-										<a class="dropdown-item" href="#">작성자 검색</a>
-										<a class="dropdown-item" href="#">로그 보기</a>
+					  	<div id="comments">
+							<th:block th:each="c : ${comments}">
+								<div class="border pb-2 mb-3" th:if="${c.cm_parent == 0}">
+									<!-- 본댓글 작성자 정보 -->
+									<div class="row dropdown no-arrow c-row">
+										<a class="nav-link dropdown-toggle col-sm-6 col-md-8 col-lg-8 col-xl-10" href="#" th:id="'commentDropdown'+${c.cm_id}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+											<i class="fas fa-2x c-icon" th:classappend="'fa-'+${c.icon_class}" th:style="'color:'+ ${c.icon_color}"></i>
+											<span class="c-nick" th:text="${c.nick}">댓글닉</span>
+											<span class="bg-primary rounded-sm text-light text-xs" th:if="${p.u_id == c.u_id}">작성자</span>
+										</a>
+										<div class="dropdown-menu shadow" th:attr="aria-labelledby='commentDropdown'+${c.cm_id}">
+											<a class="dropdown-item" href="#">작성자 검색</a>
+											<a class="dropdown-item" href="#">로그 보기</a>
+										</div>
+										<div class="col text-center">
+											<div class="btn-group" role="group" sec:authorize="isAuthenticated()">
+											  <button type="button" class="btn btn-outline-danger btn-sm cmtemotion" th:attr="data-id=${c.cm_id}" data-state="G" th:classappend="${c.emotion == 'G'} ? 'active'"><i class="fas fa-heart" th:text="${c.cm_good}"></i></button>
+											  <button type="button" class="btn btn-outline-secondary btn-sm cmtemotion" th:attr="data-id=${c.cm_id}" data-state="B" th:classappend="${c.emotion == 'B'} ? 'active'"><i class="fas fa-heart-broken" th:text="${c.cm_bad}"></i></button>
+											  <button type="button" class="btn btn-primary btn-sm addCmt" data-toggle="modal" data-target="#commentModal" th:attr="data-parent=${c.cm_id}"><i class="fas fa-plus"></i></button>
+											  <th:block th:if="${c.deleted_yn == 'N' and c.u_id == #authentication.principal.attributes.uId}">
+												  <button type="button" class="btn btn-info btn-sm editCmt" data-toggle="modal" data-target="#commentModal" th:attr="data-id=${c.cm_id}"><i class="fas fa-edit"></i></button>
+												  <button type="button" class="btn btn-danger btn-sm removeCmt" th:attr="data-id=${c.cm_id}"><i class="fas fa-trash-alt"></i></button>
+											  </th:block>
+											</div>
+											<div class="btn-group" role="group" sec:authorize="isAnonymous()">
+											  <button onclick="alert('로그인이 필요합니다'); location.href='/login';" type="button" class="btn btn-outline-danger btn-sm"><i class="fas fa-heart" th:text="${c.cm_good}"></i></button>
+											  <button onclick="alert('로그인이 필요합니다'); location.href='/login';" type="button" class="btn btn-outline-secondary btn-sm"><i class="fas fa-heart-broken" th:text="${c.cm_bad}"></i></button>
+											</div>
+										</div>
 									</div>
-									<div class="col-sm-6 col-md-4 col-lg-2 col-xl-2">
-										<span class="c-heart">
-											<a href="#"><i class="fas fa-heart text-danger"></i> <span th:text="${c.cm_good}">좋아요</span></a>
-											<a href="#"><i class="fas fa-heart-broken text-dark"></i> <span th:text="${c.cm_bad}">싫어요</span></a>
-											<a href="#">답글 <i class="fas fa-caret-down"></i></a>
-										</span>
-									</div>
-								</div>
-								<!-- 본댓글 내용 -->
-								<div class="col">
-									<div class="c-content">
-										<div class="c-date" th:text="${c.updated_at == 'null'} ? ${c.created_at} : ${c.updated_at}+' (수정됨)'">날짜</div>
-										<span th:text="${c.cm_content}">댓글내용</span>
-									</div>
-								</div>
-							</div>
-							<!-- 본댓글의 댓글들 -->
-							<div class="cc-comment" th:if="${c.cm_parent > 0}">
-								<div class="row dropdown no-arrow c-row">
-									<a class="nav-link dropdown-toggle col-sm-6 col-md-8 col-lg-10 col-xl-10" href="#" th:id="'commentDropdown'+${c.cm_id}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-										<i class="fas fa-hand-point-right fa-2x text-primary cc-icon-arrow"></i>
-										<i class="fas fa-2x cc-icon"  th:classappend="'fa-'+${c.icon_class}" th:style="'color:'+ ${c.icon_color}"></i>
-										<span class="cc-nick" th:text="${c.nick}">대댓글닉</span>
-										<span class="bg-primary text-light text-xs" th:if="${p.u_id == c.u_id}">작성자</span>
-									</a>
-									<div class="dropdown-menu shadow" th:attr="aria-labelledby='commentDropdown'+${c.cm_id}">
-										<a class="dropdown-item" href="#">작성자 검색</a>
-										<a class="dropdown-item" href="#">로그 보기</a>
-									</div>
-									<div class="col-sm-6 col-md-4 col-lg-2 col-xl-2">
-										<span class="c-heart">
-											<a href="#"><i class="fas fa-heart text-danger"></i> <span th:text="${c.cm_good}">좋아요</span></a>
-											<a href="#"><i class="fas fa-heart-broken text-dark"></i> <span th:text="${c.cm_bad}">싫어요</span></a>
-											<a href="#">답글 <i class="fas fa-caret-down"></i></a>
-										</span>
+									<!-- 본댓글 내용 -->
+									<div class="col">
+										<div class="c-content">
+											<div class="c-date" th:text="${c.updated_at == 'null'} ? ${c.created_at} : ${c.updated_at}+' (수정됨)'">날짜</div>
+											<span th:utext="${c.deleted_yn == 'N'} ? (${c.cm_bad < 10} ? ${c.cm_content} : '[블라인드 처리된 댓글입니다]') : '[삭제된 댓글입니다]'">댓글내용</span>
+											<button type="button" th:if="${c.cm_bad >= 10}" class="btn btn btn-warning btn-sm" onclick="javascript: $(this).next().css({'display': 'block'});">블라인드 댓글 보기</button>
+											<span th:utext="${c.deleted_yn == 'N' and c.cm_bad >= 10} ? ${c.cm_content}" style="display: none;"></span>
+										</div>
 									</div>
 								</div>
-								<div class="row justify-content-center">
-									<div class="col-11">
-										<div class="c-date" th:text="${c.updated_at == 'null'} ? ${c.created_at} : ${c.updated_at}+' (수정됨)'">날짜</div>
-										<span th:text="${c.cm_content}">댓글내용</span>
+								<!-- 본댓글의 댓글들 -->
+								<div class="cc-comment" th:if="${c.cm_parent > 0}">
+									<div class="row dropdown no-arrow c-row">
+										<a class="nav-link dropdown-toggle col-sm-6 col-md-8 col-lg-8 col-xl-10" href="#" th:id="'commentDropdown'+${c.cm_id}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+											<i class="fas fa-hand-point-right fa-2x text-primary cc-icon-arrow"></i>
+											<i class="fas fa-2x cc-icon"  th:classappend="'fa-'+${c.icon_class}" th:style="'color:'+ ${c.icon_color}"></i>
+											<span class="cc-nick" th:text="${c.nick}">대댓글닉</span>
+											<span class="bg-primary rounded-sm text-light text-xs" th:if="${p.u_id == c.u_id}">작성자</span>
+										</a>
+										<div class="dropdown-menu shadow" th:attr="aria-labelledby='commentDropdown'+${c.cm_id}">
+											<a class="dropdown-item" href="#">작성자 검색</a>
+											<a class="dropdown-item" href="#">로그 보기</a>
+										</div>
+										<div class="col text-center">
+											<div class="btn-group" role="group" sec:authorize="isAuthenticated()">
+											  <button type="button" class="btn btn-outline-danger btn-sm cmtemotion" th:attr="data-id=${c.cm_id}" data-state="G" th:classappend="${c.emotion == 'G'} ? 'active'"><i class="fas fa-heart" th:text="${c.cm_good}"></i></button>
+											  <button type="button" class="btn btn-outline-secondary btn-sm cmtemotion" th:attr="data-id=${c.cm_id}" data-state="B" th:classappend="${c.emotion == 'B'} ? 'active'"><i class="fas fa-heart-broken" th:text="${c.cm_bad}"></i></button>
+											  <th:block th:if="${c.deleted_yn == 'N' and c.u_id == #authentication.principal.attributes.uId}">
+												  <button type="button" class="btn btn-info btn-sm editCmt" data-toggle="modal" data-target="#commentModal" th:attr="data-id=${c.cm_id}"><i class="fas fa-edit"></i></button>
+												  <button type="button" class="btn btn-danger btn-sm removeCmt" th:attr="data-id=${c.cm_id}"><i class="fas fa-trash-alt"></i></button>
+											  </th:block>
+											</div>
+											<div class="btn-group" role="group" sec:authorize="isAnonymous()">
+											  <button onclick="alert('로그인이 필요합니다'); location.href='/login';" type="button" class="btn btn-outline-danger btn-sm"><i class="fas fa-heart" th:text="${c.cm_good}"></i></button>
+											  <button onclick="alert('로그인이 필요합니다'); location.href='/login';" type="button" class="btn btn-outline-secondary btn-sm"><i class="fas fa-heart-broken" th:text="${c.cm_bad}"></i></button>
+											</div>
+										</div>
+									</div>
+									<div class="row justify-content-center">
+										<div class="col-11">
+											<div class="c-date" th:text="${c.updated_at == 'null'} ? ${c.created_at} : ${c.updated_at}+' (수정됨)'">날짜</div>
+											<span th:utext="${c.deleted_yn == 'N'} ? (${c.cm_bad < 10} ? ${c.cm_content} : '[블라인드 처리된 댓글입니다]') : '[삭제된 댓글입니다]'">댓글내용</span>
+											<button type="button" th:if="${c.cm_bad >= 10}" class="btn btn btn-warning btn-sm" onclick="javascript: $(this).next().css({'display': 'block'});">블라인드 댓글 보기</button>
+											<span th:utext="${c.deleted_yn == 'N' and c.cm_bad >= 10} ? ${c.cm_content}" style="display: none;"></span>
+										</div>
 									</div>
 								</div>
-							</div>
-						</th:block>
+							</th:block>
+						</div>
 						
 						<!-- 댓글 작성란 -->
 						<div class="border c-txtarea">
-							<form th:action="@{/auth/comment/save}" method="post">
+							<form th:action="@{/auth/save/comment}" method="post" id="commentForm" sec:authorize="isAuthenticated()">
+								<input type="hidden" name="pId" th:value="${p.p_id}" required="required">
 							  <div class="row justify-content-center">
 								<div class="col-sm-6 col-md-8 col-lg-10 col-xl-11">
-									<textarea class="form-control" placeholder="로그인 후 댓글 작성이 가능합니다" rows="4" id="commentTxt"></textarea>
+									<textarea class="summernote" id="comment-summernote" name="cmContent" maxlength="1000" required="required"></textarea>
 								</div>
 								<div class="col-sm-6 col-md-4 col-lg-2 col-xl-1">
-								  <button type="button" class="btn btn-primary btn-lg btn-block-100">등록</button>
+								  <button type="button" class="btn btn-primary btn-lg btn-block-100" id="save">등록</button>
 								</div>
 							  </div>
 							</form>
+							<div class="row justify-content-center" sec:authorize="isAnonymous()">
+								<div class="col-sm-6 col-md-8 col-lg-10 col-xl-11">
+									<textarea class="form-control" rows="5" placeholder="로그인 후 댓글 작성이 가능합니다" readonly="readonly"></textarea>
+								</div>
+								<div class="col-sm-6 col-md-4 col-lg-2 col-xl-1">
+								  <button type="button" class="btn btn-primary btn-lg btn-block-100" onclick="alert('로그인이 필요합니다'); location.href='/login';">등록</button>
+								</div>
+							</div>
 						</div>
 						
 					  </div>
+					</div>
+					<div class="card-footer">
+						<button type="button" class="btn btn-primary btn-sm shadow-sm" data-toggle="modal" data-target="#commentModal"><i class="fas fa-plus fa-sm text-white-50"></i> 댓글 작성</button>
 					</div>
 				</div>
 			</div>
@@ -369,6 +287,31 @@
 				</div>
 			</div>
 		</div>
+     
+     <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="commentModalLabel">댓글</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	        <form th:action="@{/auth/modify/comment}" method="post" id="modalForm">
+	        	<input type="hidden" name="pId" th:value="${p.p_id}">
+	        	<input type="hidden" name="cmId">
+	        	<input type="hidden" name="cmParent">
+	          	<textarea class="summernote" id="modal-summernote" name="cmContent" required="required"></textarea>
+	        </form>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+	        <button type="button" class="btn btn-primary" id="modal-save">등록</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
      
 	</div>
 	
