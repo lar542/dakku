@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{templates/layout/default-layout}">
+
+	<th:block layout:fragment="custom-css">
+	</th:block>
+	<th:block layout:fragment="custom-js">
+		<script type="text/javascript">
+			$(function(){
+				$('.trs').click(function(){
+					menuId = $(this).attr('menu-id');
+					var type = $(this).attr('type');
+					if(type == 'P'){
+						post(1, menuId);
+					} else if(type == 'C'){
+						
+					}
+				});
+				
+				$(document).on('click', '.p-tr', function(){
+					var id = $(this).children().first().text();
+					location.href = '/post/' + menuId + '/' + id;
+				});
+				
+				$(document).on('click', '.page-link', function(){
+					var page = $(this).attr('data-page');
+					post(page, menuId);
+				});
+			});
+			function post(page, menuCode, searchType, searchWord){
+				$.ajax({
+					type: 'GET',
+					url: '/auth/user/post/detils',
+					data: {
+						page: page,
+						menuCode: menuCode
+					},
+					success: function(res){
+						var list = res.posts;
+						var html = '<table class="table table-sm table-hover">';
+						html += '<thead><tr><th scope="col">#</th><th scope="col">제목</th>';
+						html += '<th scope="col">추천수</th><th scope="col">비추천수</th><th scope="col">조회수</th>';
+						html += '<th scope="col">작성일</th></tr></thead><tbody>';
+						for(var i = 0; i < list.length; i++){
+							html += '<tr class="p-tr"><td>' + list[i].p_id + '</td><td>';
+							if(list[i].ms_nm != 'null'){
+								html += '<span class="text-dark">[' + list[i].ms_nm + ']</span>';
+							}
+							if(list[i].deleted_yn == 'Y'){
+								html += '<span>삭제한 게시글 입니다</span></td>';
+							} else {
+								if(list[i].hot_yn == 'Y'){
+									html += '<span><i class="fab fa-hotjar text-danger"></i></span>&nbsp;&nbsp;';
+								}
+								html += '<span>' + list[i].p_title + '</span></td>';
+							}
+							html += '<td>' + list[i].p_good + '</td>';
+							html += '<td>' + list[i].p_bad + '</td>';
+							html += '<td>' + list[i].p_cnt + '</td>';
+							if(list[i].updated_at != 'null') {
+								html += '<td>' + list[i].updated_at + '(수정됨)</td>';
+							} else {
+								html += '<td>' + list[i].created_at + '</td>';	
+							}
+							html += '</tr>'
+						}
+						html += '</tbody></table>';
+						
+						var pageVO = res.pageVO;
+						if(pageVO.totalPage > 0){
+							var lastPage = pageVO.totalPage < pageVO.endPage ? pageVO.totalPage : pageVO.endPage;
+							var link = '<li class="page-item';
+							if(pageVO.left <= 0){
+								link += ' disabled">';
+							} else {
+								link += '">';
+							}
+							link += '<a class="page-link" href="#"';
+							if(pageVO.left > 0){
+								link += ' data-page="' + pageVO.left + '"';
+							}
+							link += '><span aria-hidden="true">&laquo;</span></a></li>';
+							for(var page = pageVO.startPage; page <= lastPage; page++){
+								link += '<li class="page-item';
+								if(page == pageVO.currentPage){
+									link += ' active">';								
+								} else {
+									link += '">';
+								}
+								link += '<a class="page-link" href="#" data-page='+page+'>'+page+'</a></li>';
+							}
+							link += '<li class="page-item';
+							if(pageVO.right <= 0){
+								link += ' disabled">';			
+							} else {
+								link += '">';
+							}
+							link += '<a class="page-link" href="#"';
+							if(pageVO.right > 0){
+								link += ' data-page="' + pageVO.right + '"'
+							}
+							link += '><span aria-hidden="true">&raquo;</span></a></li>';
+							$('#p-page-link').css({'display': 'flex'}).html(link);
+						}
+						$('#resultTable').html(html);
+					}
+				});
+			}
+		</script>
+	</th:block>
+	
+	<div class="container-fluid" layout:fragment="content">
+		<div class="d-sm-flex align-items-center justify-content-between mb-4">
+			<h1 class="h3 mb-0 text-gray-800" th:text=${pageinfo.menu_nm}>게시판 이름</h1>
+			<a th:href="@{/auth/post/write/}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-pen fa-sm text-white-50"></i> 글쓰기</a>
+		</div>
+		
+		<div class="row">
+		
+			<div class="col-lg-6">
+				<!-- 게시판별 작성 게시글 수 -->
+				<div class="card shadow mb-4">
+					<div class="card-header py-3">
+	                  <h6 class="m-0 font-weight-bold text-primary">작성 게시글</h6>
+	                </div>
+	                <div class="card-body">
+	                	<table class="table table-sm table-hover">
+						  <thead>
+							<tr>
+							  <th scope="col">게시판 이름</th>
+							  <th scope="col">글 수</th>
+							</tr>
+						  </thead>
+						  <tbody>
+						  	<tr class="text-center" th:if="${#lists.size(postsCnt) == 0}">
+						  		<td colspan="2">작성한 게시글이 없습니다</td>
+						  	</tr>
+						  	<tr class="trs" th:each="p : ${postsCnt}" th:attr="menu-id=${p.menu_code}, type='P'">
+							  <td th:text="${p.menu_nm}"></td>
+							  <td th:text="${p.p_cnt}"></td>
+							</tr>
+						  </tbody>
+						</table>
+	                </div>
+				</div>
+				<!-- 게시판별 작성 댓글 수 -->
+				<div class="card shadow mb-4">
+					<div class="card-header py-3">
+	                  <h6 class="m-0 font-weight-bold text-primary">작성 댓글</h6>
+	                </div>
+	                <div class="card-body">
+	                	<table class="table table-sm table-hover">
+						  <thead>
+							<tr>
+							  <th scope="col">게시판 이름</th>
+							  <th scope="col">댓글 수</th>
+							</tr>
+						  </thead>
+						  <tbody>
+						  	<tr class="text-center" th:if="${#lists.size(cmtsCnt) == 0}">
+						  		<td colspan="2">작성한 댓글이 없습니다</td>
+						  	</tr>
+						  	<tr class="trs" th:each="c : ${cmtsCnt}" th:attr="menu-id=${c.menu_code}, type='C'">
+							  <td th:text="${c.menu_nm}"></td>
+							  <td th:text="${c.c_cnt}"></td>
+							</tr>
+						  </tbody>
+						</table>
+	                </div>
+				</div>
+			</div>
+			
+			<div class="col-lg-6">
+				<div class="card shadow mb-4">
+					<div class="card-header py-3">
+	                  <h6 class="m-0 font-weight-bold text-primary">조회 결과</h6>
+	                </div>
+	                <div class="card-body">
+	                	<div class="row" id="resultTable"></div>
+	                	<div class="row">
+							<div class="col-sm-12">
+								<nav aria-label="Page navigation example">
+								  <ul class="pagination justify-content-end" id="p-page-link" style="display: none;">
+								  </ul>
+								</nav>
+							</div>
+						</div>
+	                </div>
+				</div>
+			</div>
+			
+		</div>
+	</div>
+</html>

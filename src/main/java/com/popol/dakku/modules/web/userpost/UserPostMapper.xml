@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.popol.dakku.modules.web.userpost.UserPostMapper">
+
+	<select id="getPostCntGroupByMenu" parameterType="Long" resultType="HashMap">
+		select 
+			p.menu_code,
+		    m.menu_nm,
+		    count(p.p_id) as p_cnt
+		from post p
+		inner join menu m on (m.menu_code = p.menu_code)
+		where p.u_id = #{u_id}
+		group by p.menu_code
+	</select>
+	
+	<select id="getCmtCntGroupByMenu" parameterType="Long" resultType="HashMap">
+		select
+			p.menu_code,
+		    m.menu_nm,
+		    count(cm_id) as c_cnt
+		from comment c
+		inner join post p on (p.p_id = c.p_id)
+		inner join menu m on (m.menu_code = p.menu_code)
+		where c.u_id = #{u_id}
+		group by p.menu_code
+	</select>
+	
+	<sql id="searchFrag">
+		where p.u_id = #{uId}
+		and p.menu_code = #{menuCode}
+	</sql>
+	
+	<select id="getTotalCntOfPost" parameterType="PagingVO" resultType="int">
+		select
+			count(*)
+		from post p
+		<include refid="searchFrag" />
+	</select>
+	
+	<select id="getPostList" parameterType="PagingVO" resultType="HashMap">
+		select 
+			A.p_id,
+			ifnull(A.ms_nm, 'null') as ms_nm,
+			A.p_title,
+			A.p_good,
+			A.p_bad,
+			A.p_cnt,
+			A.hot_yn,
+			date_format(A.created_at, '%y/%m/%d %H:%i') as created_at,
+			ifnull(date_format(A.updated_at, '%y/%m/%d %H:%i'), 'null') as updated_at,
+			A.deleted_yn
+		from
+		(	
+			select 
+				p.p_id,
+				ms.ms_nm,
+				p.p_title,
+				p.p_good,
+				p.p_bad,
+				p.p_cnt,
+				p.hot_yn,
+				p.created_at,
+				p.updated_at,
+				p.deleted_yn
+			from post p
+			left join menu_state ms on (p.ms_code = ms.ms_code)
+			<include refid="searchFrag" />
+			order by p.p_id desc
+		) A
+		limit #{screenSize} offset #{offset}
+	</select>
+	
+</mapper>
