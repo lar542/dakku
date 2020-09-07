@@ -87,7 +87,11 @@
 						  	</tr>
 						  	<tr class="trs" th:each="post : ${posts}">
 							  <th scope="row" th:text="${post.p_id}"></th>
-							  <td th:text="${post.ms_nm == 'null'} ? ${post.p_title} : '['+${post.ms_nm}+'] '+${post.p_title}"></td>
+							  <td>
+							  	<span class="text-dark" th:text="${post.ms_nm != 'null'} ? ${post.ms_nm}"></span>
+							  	<span th:text="${post.p_title}"></span>
+							  	<span class="text-primary font-weight-bold" th:text="'['+${post.cmt_cnt}+']'"></span>
+							  </td>
 							  <td th:text="${post.nick}"></td>
 							  <td th:text="${post.created_at}"></td>
 							  <td th:text="${post.p_cnt}"></td>
@@ -102,7 +106,7 @@
 						<nav aria-label="Page navigation example">
 						  <ul class="pagination justify-content-end" th:if="${pageVO.totalPage > 0}" 
 						  	th:with="lastPage=(${pageVO.totalPage < pageVO.endPage ? pageVO.totalPage : pageVO.endPage})">
-						  	
+
 							<li class="page-item" th:classappend="${pageVO.left <= 0} ? 'disabled'">
 							  <a class="page-link" href="#" th:attr="data-page=(${pageVO.left > 0} ? ${pageVO.left})"><span aria-hidden="true">&laquo;</span></a>
 							</li>
@@ -112,6 +116,7 @@
 							<li class="page-item" th:classappend="${pageVO.right <= 0} ? 'disabled'">
 							  <a class="page-link" href="#" th:attr="data-page=(${pageVO.right > 0} ? ${pageVO.right})"><span aria-hidden="true">&raquo;</span></a>
 							</li>
+							
 						  </ul>
 						</nav>
 					</div>

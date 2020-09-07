@@ -59,6 +59,9 @@ public class PostController {
 		viewCookie(req.getCookies(), postId, res);
 		//게시글
 		Map post = postMapper.getPost(postId);
+		if(post == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "삭제된 게시글이거나 존재하지 않는 게시글입니다!");
+		}
 		model.addAttribute("p", post);
 		//로그인 상태일 때 이미 게시글에 좋아요/싫어요 했는지
 		model.addAttribute("alreadyEmotion", "null");
@@ -323,8 +326,7 @@ public class PostController {
 		UserVO userVO = (UserVO) UserDetailsHelper.getAuthenticatedUser();
 		params.put("u_id", userVO.getU_id());
 		Map comment = postMapper.getComment(params);
-		comment.put("resultCode", "fail");
-		if (!comment.isEmpty()) {
+		if (comment != null) {
 			comment.put("resultCode", "success");
 			List<Map> files = postMapper.getFiles("C" + cmId);
 			for (Map file : files) {
@@ -332,6 +334,8 @@ public class PostController {
 				file.put("deleted", "N");
 			}
 			comment.put("files", files);
+		} else {
+			comment.put("resultCode", "fail");
 		}
 		return comment;
 	}

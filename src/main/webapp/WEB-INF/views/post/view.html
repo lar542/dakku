@@ -256,7 +256,11 @@
 						  <tbody>
 						  	<tr class="trs" th:classappend="${post.p_id == p.p_id} ? 'table-active'" th:each="post : ${posts}">
 							  <th scope="row" th:text="${post.p_id}"></th>
-							  <td th:text="${post.ms_nm == 'null'} ? ${post.p_title} : '['+${post.ms_nm}+'] '+${post.p_title}"></td>
+							  <td>
+							  	<span class="text-dark" th:text="${post.ms_nm != 'null'} ? ${post.ms_nm}"></span>
+							  	<span th:text="${post.p_title}"></span>
+							  	<span class="text-primary font-weight-bold" th:text="'['+${post.cmt_cnt}+']'"></span>
+							  </td>
 							  <td th:text="${post.nick}"></td>
 							  <td th:text="${post.created_at}"></td>
 							  <td th:text="${post.p_cnt}"></td>

@@ -26,6 +26,7 @@ public class PaginationInfoVO implements Serializable {
 	private String msCode;			//현 게시판 게시글 상태
 	private String searchType; 		//검색 조건
 	private String searchWord; 		//검색어
+	private Long uId;
 
 	public PaginationInfoVO() {}
 	

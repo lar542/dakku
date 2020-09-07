@@ -46,7 +46,8 @@
 			A.p_cnt,
 			A.hot_yn,
 			date_format(A.created_at, '%y/%m/%d %H:%i') as created_at,
-			A.nick
+			A.nick,
+			cmt_cnt
 		from
 		(	
 			select 
@@ -57,11 +58,14 @@
 				p.p_cnt,
 				p.hot_yn,
 		        p.created_at,
-		        nick
+		        nick,
+		        count(cm_id) as cmt_cnt
 			from post p
 			inner join user u on (u.u_id = p.u_id)
 			left join menu_state ms on (p.ms_code = ms.ms_code)
+			left join comment c on (c.p_id = p.p_id)
 			<include refid="searchFrag" />
+			group by p.p_id
 			order by p.p_id desc
 		) A
 		limit #{screenSize} offset #{offset}
