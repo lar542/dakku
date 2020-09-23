@@ -1,4 +1,4 @@
-package com.popol.dakku.config;
+package com.popol.dakku.modules.commons.auth;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -19,19 +20,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.popol.dakku.modules.commons.auth.oauth2.OAuthAttributes;
 import com.popol.dakku.modules.commons.auth.vo.UserVO;
+import com.popol.dakku.modules.web.actlog.ActLogMapper;
 import com.popol.dakku.modules.web.auth.AuthMapper;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 소셜 로그인 후 가져온 사용자 정보를 기반으로 
  * 가입, 정보 수정, 세션 저장 등의 기능 지원
  */
-@RequiredArgsConstructor
 @Service
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
-	private final AuthMapper authMapper;
+	@Autowired
+	private AuthMapper authMapper;
+	@Autowired
+	private ActLogMapper actLogMapper;
 	
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -83,12 +85,32 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 		}
 		//권한 조회
 		userVO.setRoles(authMapper.getRoles(userVO.getU_id()));
+		//오늘 첫 로그인 경험치
+		int accCnt = authMapper.getTodayLoginLog(userVO.getU_id());
+		if(accCnt == 0) {
+			Map map = new HashMap();
+			map.put("u_id", userVO.getU_id());
+			map.put("plusExp", userVO.getAdditional_exp());
+			authMapper.plusExp(map); //경험지 추가
+			userVO.setExp(userVO.getExp() + userVO.getAdditional_exp());
+			//레벨업
+			if(userVO.getExp() >= userVO.getNext_required_exp()) {
+				String lvCode = "LV" + userVO.getLv() + 1;
+				userVO.setLv_code(lvCode);
+				userVO.setLv(userVO.getLv() + 1);
+				map.put("lv_code", lvCode);
+				authMapper.levelUp(map);
+				map.put("al_type", "U");
+				map.put("al_content", "[레벨업] " + lvCode);
+				actLogMapper.addActLog(map);
+			}
+		}
 		//로그인 기록 추가
 		Map<String, Object> log = new HashMap<String, Object>();
-		log.put("login_status", "OK");
-		log.put("login_type", userVO.getSns_type());
+		log.put("al_type", "L");
+		log.put("al_content", userVO.getSns_type() + " 로그인");
 		log.put("u_id", userVO.getU_id());
-		authMapper.addAccLog(log);
+		actLogMapper.addActLog(log);
 		return userVO;
 	}
 }

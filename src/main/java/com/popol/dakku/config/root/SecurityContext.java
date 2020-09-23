@@ -1,4 +1,4 @@
-package com.popol.dakku.config;
+package com.popol.dakku.config.root;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,26 +18,23 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
+import com.popol.dakku.modules.commons.auth.CustomOAuth2UserService;
 import com.popol.dakku.modules.commons.auth.oauth2.CustomOAuth2Provider;
-
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 @PropertySource("classpath:application-oauth.properties")
-@RequiredArgsConstructor
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityContext extends WebSecurityConfigurerAdapter {
 
 	private static String CLIENT_PROPERTY_KEY = "spring.security.oauth2.client.registration.";
 	private static List<String> clients = Arrays.asList("google", "naver");
 	
 	@Autowired
 	private Environment env;
-	
-	private final CustomOAuth2UserService customOAuth2UserService;
 	
 	@Bean
 	public ClientRegistrationRepository clientRegistrationRepository() {
@@ -73,6 +70,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		return new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository());
 	}
 	
+	@Bean
+	public OAuth2UserService customOAuth2UserService() {
+		return new CustomOAuth2UserService();
+	}
+	
 	/**
 	 * 다음의 경로를 Spring Security 적용 안하기
 	 */
@@ -105,7 +107,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 					.clientRegistrationRepository(clientRegistrationRepository())
 					.authorizedClientService(authorizedClientService())
 					.userInfoEndpoint()
-						.userService(customOAuth2UserService);
+						.userService(customOAuth2UserService());
 	}
 	
 	private CsrfTokenRepository csrfTokenRepository() {
@@ -113,5 +115,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		csrfTokenRepository.setSessionAttributeName("_csrf");
 		return csrfTokenRepository;
 	}
-	
 }
