@@ -68,7 +68,7 @@ public class OAuthAttributes {
 		attributes.put("icon_class", userVO.getIcon_class());
 		attributes.put("icon_color", userVO.getIcon_color());
 		attributes.put("lv", userVO.getLv());
-		attributes.put("next_required_exp", Integer.parseInt(userVO.getStored_exp()) + Integer.parseInt(userVO.getRequired_exp()));
+		attributes.put("next_required_exp", userVO.getNext_required_exp());
 	}
 	
 	public UserVO toEntity() {

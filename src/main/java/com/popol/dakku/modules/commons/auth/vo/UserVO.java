@@ -26,9 +26,9 @@ public class UserVO {
 	private String lv_code;
 	private String icon_class;
 	private String icon_color;
-	private String lv;
-	private String stored_exp;
-	private String required_exp;
+	private Integer lv;
+	private Integer next_required_exp;
+	private Integer additional_exp;
 	
 	@Builder
 	public UserVO(Long u_id, String email, String nick,
