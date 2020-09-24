@@ -54,9 +54,19 @@ public class ServletContext implements WebMvcConfigurer {
 	
 	private final Set<IDialect> additionalDialects() {
 		Set<IDialect> dialects = new HashSet<IDialect>();
-		dialects.add(new LayoutDialect());
-		dialects.add(new SpringSecurityDialect());
+		dialects.add(layoutDialect());
+		dialects.add(springSecurityDialect());
 		return dialects;
+	}
+	
+	@Bean
+	public IDialect layoutDialect() {
+		return new LayoutDialect();
+	}
+	
+	@Bean
+	public IDialect springSecurityDialect() {
+		return new SpringSecurityDialect();
 	}
 	
 	@Bean
@@ -75,16 +85,16 @@ public class ServletContext implements WebMvcConfigurer {
 		return multipartResolver;
 	}
 	
-	@Bean
-	public MenuLoadInterceptor menuLoadInterceptor() {
-		return new MenuLoadInterceptor();
-	}
-	
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry
 			.addInterceptor(menuLoadInterceptor())
-			.addPathPatterns("/", "/post/**", "/auth/post/**", "/auth/inven/**");
+			.addPathPatterns("/", "/post/**", "/auth/post/**", "/auth/inven/**", "/shop/**", "/rank");
+	}
+	
+	@Bean
+	public MenuLoadInterceptor menuLoadInterceptor() {
+		return new MenuLoadInterceptor();
 	}
 	
 	@Override
