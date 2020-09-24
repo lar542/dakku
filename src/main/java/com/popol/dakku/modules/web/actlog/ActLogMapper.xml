@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.popol.dakku.modules.web.actlog.ActLogMapper">
+
+	<insert id="addActLog" parameterType="HashMap">
+		insert into act_log (al_type, al_content, u_id)
+		values (#{al_type}, #{al_content}, #{u_id})
+	</insert>
+	
+</mapper>
