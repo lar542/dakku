@@ -8,6 +8,7 @@
 	<select id="getUserInfo" parameterType="String" resultType="UserVO">
 		select
 			u.u_id,
+			u.sns_type,
 			nick,
 			exp,
 			cheer,
@@ -16,8 +17,8 @@
 			c_parent_code as icon_class,
 			c_content4 as icon_color,
 			c_nm as lv,
-			c_content1 as stored_exp,
-			c_content2 as required_exp
+			cast(c_content1 as unsigned) + cast(c_content2 as unsigned) as next_required_exp, 
+			c_content3 as additional_exp
 		from user u
 		inner join common_code c on (c.c_code = u.lv_code)
 		where email = #{email}
@@ -36,11 +37,6 @@
 		</foreach>
 	</insert>
 	
-	<insert id="addAccLog" parameterType="HashMap">
-		insert into acc_log (login_status, login_type, u_id) 
-		values (#{login_status}, #{login_type}, #{u_id})
-	</insert>
-	
 	<select id="getRoles" parameterType="Long" resultType="HashMap">
 		select role_code from role where u_id = #{u_id}
 	</select>
@@ -49,5 +45,28 @@
 		insert into inven (u_id, c_code, p_id)
 		values (#{u_id}, #{c_code}, #{p_id})
 	</select>
+	
+	<select id="getTodayLoginLog" parameterType="Long" resultType="int">
+		select
+			count(*)
+		from act_log
+		where u_id = #{u_id}
+		and al_type = 'L'
+		and date_format(created_at, '%y%m%d') = date_format(NOW(), '%y%m%d')
+	</select>
+	
+	<update id="plusExp" parameterType="HashMap">
+		update user
+		set
+			exp = exp + cast(#{plusExp} as unsigned)
+		where u_id = #{u_id}
+	</update>
+	
+	<update id="levelUp" parameterType="HashMap">
+		update user
+		set
+			lv_code = #{lv_code}
+		where u_id = #{u_id}
+	</update>
 	
 </mapper>

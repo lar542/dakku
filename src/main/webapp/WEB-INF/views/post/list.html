@@ -88,7 +88,8 @@
 						  	<tr class="trs" th:each="post : ${posts}">
 							  <th scope="row" th:text="${post.p_id}"></th>
 							  <td>
-							  	<span class="text-dark" th:text="${post.ms_nm != 'null'} ? ${post.ms_nm}"></span>
+							  	<span th:if="${post.hot_yn == 'Y'}"><i class="fab fa-hotjar text-danger"></i>&nbsp;&nbsp;</span>
+							  	<span class="text-dark font-weight-bold" th:text="${post.ms_nm != 'null'} ? '['+${post.ms_nm}+']'"></span>
 							  	<span th:text="${post.p_title}"></span>
 							  	<span class="text-primary font-weight-bold" th:text="'['+${post.cmt_cnt}+']'"></span>
 							  </td>

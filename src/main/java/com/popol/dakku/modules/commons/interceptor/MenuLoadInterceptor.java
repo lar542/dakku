@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -15,11 +16,8 @@ import com.popol.dakku.modules.web.menu.MenuMapper;
 
 public class MenuLoadInterceptor extends HandlerInterceptorAdapter {
 	
+	@Autowired
 	private MenuMapper menuMapper;
-	
-	public MenuLoadInterceptor(MenuMapper menuMapper) {
-		this.menuMapper = menuMapper;
-	}
 	
 	@Override
 	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,

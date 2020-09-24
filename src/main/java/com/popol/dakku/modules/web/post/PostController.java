@@ -13,6 +13,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,18 +33,14 @@ import com.popol.dakku.modules.commons.util.HtmlUtil;
 import com.popol.dakku.modules.commons.vo.PaginationInfoVO;
 
 @Controller
+@Transactional
 public class PostController {
 	
 	@Resource(name = "postMapper")
 	private PostMapper postMapper;
 	
-	@GetMapping("/post/list/{menuCode}")
+	@GetMapping("/posts/{menuCode}")
 	public String list(@PathVariable String menuCode, HttpServletRequest req, Model model) {
-		Map pageinfo =  postMapper.getPageNm(menuCode);
-		if(pageinfo == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Page Not Found");
-		}
-		model.addAttribute("pageinfo", pageinfo);
 		addAttr(menuCode, req, model);
 		return "post/list";
 	}

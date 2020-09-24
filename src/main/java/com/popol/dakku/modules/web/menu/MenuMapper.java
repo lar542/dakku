@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface MenuMapper {
 
-	public List getMenuList() throws Exception;
+	public List getMenuList();
 }

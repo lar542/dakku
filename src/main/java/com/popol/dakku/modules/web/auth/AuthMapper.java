@@ -25,19 +25,9 @@ public interface AuthMapper {
 	public void addRole(UserVO userVO);
 	
 	/**
-	 * 로그인 기록 추가
-	 */
-	public void addAccLog(Map map);
-	
-	/**
 	 * 사용자 권한 조회 
 	 */
 	public List getRoles(Long u_id);
-	
-	/**
-	 * 오늘 첫 로그인인지 확인 
-	 */
-	public int todayLogin(Long u_id);
 	
 	/**
 	 * 사용자 인벤에 추가
@@ -45,7 +35,6 @@ public interface AuthMapper {
 	 * 2. 아이템 추가 
 	 */
 	public void addItem(Map item);
-	
 	
 	/**
 	 * 사용자 닉네임 변경
@@ -58,4 +47,19 @@ public interface AuthMapper {
 	 */
 	@Update("update user set deleted_yn = 'Y' where u_id = #{u_id}")
 	public void removeUser(int u_id);
+	
+	/**
+	 * 오늘 첫 로그인 여부 확인
+	 */
+	public int getTodayLoginLog(Long u_id);
+	
+	/**
+	 * 유저의 경험치 추가
+	 */
+	public void plusExp(Map map);
+	
+	/**
+	 * 유저 레벨업
+	 */
+	public void levelUp(Map map);
 }
