@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{templates/layout/default-layout}">
+	
+	<th:block layout:fragment="custom-css">
+	</th:block>
+	
+	<th:block layout:fragment="custom-js">
+		<script>
+			$(function(){
+				$('.add').click(function(){
+					var type = $(this).attr('btn-type');
+					var html = '<tr><td colspan="3"><textarea class="form-control mb-2" rows="3"></textarea><button class="btn btn-primary btn-sm save" btn-type="'+type+'">저장</button></td></tr>';
+					var tbody = $(this).parents('table').find('tbody');
+					tbody.find('.save').detach();
+					tbody.append(html);
+				});
+			});
+			$(document).on('click', '.save', function(){
+				var tbody = $(this).parents('tbody');
+				var textareas = tbody.find('textarea');
+				var data = [];
+				for(var i = 0; i < textareas.length; i++){
+					data.push(textareas[i].value);
+				}
+				var type = $(this).attr('btn-type');
+				if(!(type == 'D' || type == 'W' || type == 'M')){
+					alert('잘못된 요청입니다!');
+					return;
+				} else {
+					var header = $("meta[name='_csrf_header']").attr('content');
+					var token = $("meta[name='_csrf']").attr('content');
+					$.ajax({
+						type: 'POST',
+						url: '/auth/add/quest',
+						data: {detail: data, qDiv: type},
+						traditional: true,
+						beforeSend: function(xhr){
+							xhr.setRequestHeader(header, token);
+						},
+						success: function(res){
+							if(res.resultCode == 'N'){
+								alert('잘못된 요청입니다!');
+								return;
+							} else if(res.resultCode == 'ERROR'){
+								alert('[에러] 잠시 후 다시 시도해주세요!');
+								return;
+							} else if(res.resultCode == 'Y') {
+								var list = res.list;
+								var html = '';
+								for(var i = 0; i < list.length; i++) {
+									html += '<tr><td><span>' + list[i].qc_content + '</span><button class="btn btn-info btn-circle btn-sm"><i class="fas fa-info-circle"></i></button></td>';
+									html += '<td>'
+									if(list[i].qc_compl_yn == 'Y'){
+										html += '<div class="bg-success text-white p-1 rotate-n-15 d-inline-block float-right">Cleared!</div>';
+									}
+									html += '</td><td><button class="btn btn-success btn-circle btn-sm float-right"';
+									if(list[i].qc_compl_yn == 'Y'){
+										html += ' disabled="disabled"';
+									}
+									html += '><i class="fas fa-check"></i></button></td></tr>';
+								}
+								tbody.html(html);
+							}
+						}
+					});
+				}
+			});
+		</script>
+	</th:block>
+	
+	<div class="container-fluid" layout:fragment="content">
+		<div class="d-sm-flex align-items-center justify-content-between mb-4">
+			<h1 class="h3 mb-0 text-gray-800" th:text=${pageinfo.menu_nm}>게시판 이름</h1>
+			<a th:href="@{/auth/post/write/}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-pen fa-sm text-white-50"></i> 글쓰기</a>
+		</div>
+		
+		<div class="row">
+		   <!-- Left Card List -->
+           <div class="col-lg-6">
+           	   <!-- Daily Quest Card -->
+               <div class="card shadow mb-4">
+                   <!-- Card Header -->
+                   <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                       <h6 class="m-0 font-weight-bold text-primary">일일 퀘스트</h6>
+                   </div>
+                   <!-- Card Body -->
+                   <div class="card-body">
+                       <div class="table-responsive">
+                           <table class="table" width="100%">
+                               <thead>
+                                   <tr>
+                                       <th>퀘스트 내용</th>
+                                       <th></th>
+                                       <th class="text-right">
+                                       		<button class="btn btn-primary btn-circle btn-sm add" btn-type="D">
+				                               <i class="fas fa-plus"></i>
+				                           </button>
+				                           <button class="btn btn-warning btn-circle btn-sm">
+				                               <i class="fas fa-edit"></i>
+				                           </button>
+                                       </th>
+                                   </tr>
+                               </thead>
+                               <tbody>
+									<tr th:if="${#lists.size(daily) == 0}">
+										<td colspan="3">작성한 일일 퀘스트가 없습니다</td>
+									</tr>
+                                    <tr th:each="item : ${daily}">
+                                       <td>
+                                       		<span th:text="${item.qc_content}"></span>
+											<button class="btn btn-info btn-circle btn-sm">
+											    <i class="fas fa-info-circle"></i>
+											</button>
+                                       </td>
+                                       <td>
+                                       		<div th:if="${item.qc_compl_yn == 'Y'}" class="bg-success text-white p-1 rotate-n-15 d-inline-block float-right">Cleared!</div>
+                                       </td>
+                                       <td>
+                                           <button class="btn btn-success btn-circle btn-sm float-right" th:disabled="${item.qc_compl_yn == 'Y'}">
+                                               <i class="fas fa-check"></i>
+                                           </button>
+                                       </td>
+                                    </tr>
+                               </tbody>
+                           </table>
+                       </div>
+                   </div>
+               </div>             
+           </div>
+           <!-- Left Card List -->
+
+           <!-- Right Card List -->
+           <div class="col-lg-6">
+               <!-- Weekly Quest Card -->
+               <div class="card shadow mb-4">
+                   <!-- Card Header -->
+                   <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                       <h6 class="m-0 font-weight-bold text-primary">주간 퀘스트</h6>
+                   </div>
+                   <!-- Card Body -->
+                   <div class="card-body">
+                       <div class="table-responsive">
+                           <table class="table" width="100%">
+                               <thead>
+                                   <tr>
+                                       <th>퀘스트 내용</th>
+                                       <th></th>
+                                       <th class="text-right">
+                                       		<button class="btn btn-primary btn-circle btn-sm add" btn-type="W">
+				                               <i class="fas fa-plus"></i>
+				                           </button>
+				                           <button class="btn btn-warning btn-circle btn-sm">
+				                               <i class="fas fa-edit"></i>
+				                           </button>
+                                       </th>
+                                   </tr>
+                               </thead>
+                               <tbody>
+									<tr th:if="${#lists.size(weekly) == 0}">
+										<td colspan="3">작성한 주간 퀘스트가 없습니다</td>
+									</tr>
+                                    <tr th:each="item : ${weekly}">
+                                       <td>
+                                       		<span th:text="${item.qc_content}"></span>
+											<button class="btn btn-info btn-circle btn-sm">
+											    <i class="fas fa-info-circle"></i>
+											</button>
+                                       </td>
+                                       <td>
+                                       		<div th:if="${item.qc_compl_yn == 'Y'}" class="bg-success text-white p-1 rotate-n-15 d-inline-block float-right">Cleared!</div>
+                                       </td>
+                                       <td>
+                                           <button class="btn btn-success btn-circle btn-sm float-right" th:attr="${item.qc_compl_yn == 'Y'} ? disabled='disabled'">
+                                               <i class="fas fa-check"></i>
+                                           </button>
+                                       </td>
+                                    </tr>
+                               </tbody>
+                           </table>
+                       </div>
+                   </div>
+               </div>
+
+               <!-- Monthly Quest Card  -->
+               <div class="card shadow mb-4">
+                   <!-- Card Header -->
+                   <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                       <h6 class="m-0 font-weight-bold text-primary">월간 퀘스트</h6>
+                   </div>
+                   <!-- Card Body -->
+                   <div class="card-body">
+                       <div class="table-responsive">
+                           <table class="table" width="100%">
+                               <thead>
+                                   <tr>
+                                       <th>퀘스트 내용</th>
+                                       <th></th>
+                                       <th class="text-right">
+                                       		<button class="btn btn-primary btn-circle btn-sm add" btn-type="M">
+				                               <i class="fas fa-plus"></i>
+				                           </button>
+				                           <button class="btn btn-warning btn-circle btn-sm">
+				                               <i class="fas fa-edit"></i>
+				                           </button>
+                                       </th>
+                                   </tr>
+                               </thead>
+                               <tbody>
+									<tr th:if="${#lists.size(monthly) == 0}">
+										<td colspan="3">작성한 월간 퀘스트가 없습니다</td>
+									</tr>
+                                    <tr th:each="item : ${monthly}">
+                                       <td>
+                                       		<span th:text="${item.qc_content}"></span>
+											<button class="btn btn-info btn-circle btn-sm">
+											    <i class="fas fa-info-circle"></i>
+											</button>
+                                       </td>
+                                       <td>
+                                       		<div th:if="${item.qc_compl_yn == 'Y'}" class="bg-success text-white p-1 rotate-n-15 d-inline-block float-right">Cleared!</div>
+                                       </td>
+                                       <td>
+                                           <button class="btn btn-success btn-circle btn-sm float-right" th:attr="${item.qc_compl_yn == 'Y'} ? disabled='disabled'">
+                                               <i class="fas fa-check"></i>
+                                           </button>
+                                       </td>
+                                    </tr>
+                               </tbody>
+                           </table>
+                       </div>
+                   </div>
+               </div>
+
+           </div>
+           <!-- Right Card List -->
+
+       </div>
+		
+		<div class="row">
+			<div class="col-lg">
+				<div class="card shadow mb-4">
+					<!-- Card Header -->
+					<div></div>
+					<!-- Card Body -->
+					<div></div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg">
+				<div class="card shadow mb-4">
+					<!-- Card Header -->
+					<div></div>
+					<!-- Card Body -->
+					<div></div>
+				</div>
+			</div>
+		</div>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<div class="modal fade" id="questModal" tabindex="-1" aria-labelledby="questModalLabel" aria-hidden="true">
+		  <div class="modal-dialog modal-dialog-centered">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title" id="questModalLabel">댓글</h5>
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+		      </div>
+		      <div class="modal-body">
+		        <form th:action="@{/auth/modify/comment}" method="post" id="modalForm">
+		        	<input type="hidden" name="cmId">
+		        	<input type="hidden" name="cmParent">
+		          	<textarea class="summernote" id="modal-summernote" name="cmContent" required="required"></textarea>
+		        </form>
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+		        <button type="button" class="btn btn-primary" id="modal-save">등록</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+		
+	</div>
+	
+</html>
