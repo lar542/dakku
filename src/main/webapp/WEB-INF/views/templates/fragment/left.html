@@ -22,7 +22,7 @@
 
 	<th:block th:each="entry : ${menuList}">
 		
-		<hr class="sidebar-divider" th:if="${entryStat.odd}">
+		<hr class="sidebar-divider my-0" th:if="${entryStat.odd}">
 	
 		<li class="nav-item" th:if="${#lists.size(entry.value.subs) > 0 }">
 			<a class="nav-link collapsed" data-toggle="collapse" aria-expanded="false" href="#"
