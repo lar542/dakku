@@ -21,7 +21,12 @@
 		left join quest_content qc on (qc.q_id = q.q_id)
 		where u_id = #{u_id}
 		and q_div = #{q_div}
-		and date_format(q.created_at, '%y%m%d') = date_format(NOW(), '%y%m%d')
+		<if test='q_div.equals("D")'>
+		and q_d_date = #{q_d_date}
+		</if>
+		<if test='!q_div.equals("D")'>
+		and q_wm_end = #{q_wm_end}
+		</if>
 	</select>
 	
 	<insert id="addQuest" parameterType="HashMap" useGeneratedKeys="true" keyProperty="q_id">
@@ -48,15 +53,22 @@
 		</if>
 		<if test='!q_div.equals("D")'>
 		and q_wm_end = #{q_wm_end}
-		</if>  
+		</if>
 	</select>
+	
+	<update id="clearedOneQuest" parameterType="Long">
+		update quest_content
+		set
+			qc_compl_yn = 'Y',
+			updated_at = NOW()			
+		where qc_id = #{qc_id}
+	</update>
 	
 	<update id="modifyQuest" parameterType="java.util.List">
 		<foreach collection="list" item="item" separator=";">
 			<if test="item.flag == 'D'">
 				delete
 				from quest_content
-				where q_id = #{item.q_id}
 				and qc_id = #{item.qc_id}
 			</if>
 			<if test="item.flag == 'U'">
@@ -65,17 +77,9 @@
 					qc_content = #{item.qc_content},
 					qc_compl_yn = #{item.qc_compl_yn},
 					updated_at = NOW()
-				where q_id = #{item.q_id}
 				and qc_id = #{item.qc_id}
 			</if>
 		</foreach>
-	</update>
-	
-	<update id="clearedOneQuest" parameterType="Long">
-		update quest_content
-		set
-			qc_compl_yn = 'Y'
-		where qc_id = #{qc_id}
 	</update>
 	
 	<select id="getQuestCnt" parameterType="HashMap" resultType="HashMap">

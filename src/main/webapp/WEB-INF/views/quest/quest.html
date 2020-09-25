@@ -8,67 +8,7 @@
 	</th:block>
 	
 	<th:block layout:fragment="custom-js">
-		<script>
-			$(function(){
-				$('.add').click(function(){
-					var type = $(this).attr('btn-type');
-					var html = '<tr><td colspan="3"><textarea class="form-control mb-2" rows="3"></textarea><button class="btn btn-primary btn-sm save" btn-type="'+type+'">저장</button></td></tr>';
-					var tbody = $(this).parents('table').find('tbody');
-					tbody.find('.save').detach();
-					tbody.append(html);
-				});
-			});
-			$(document).on('click', '.save', function(){
-				var tbody = $(this).parents('tbody');
-				var textareas = tbody.find('textarea');
-				var data = [];
-				for(var i = 0; i < textareas.length; i++){
-					data.push(textareas[i].value);
-				}
-				var type = $(this).attr('btn-type');
-				if(!(type == 'D' || type == 'W' || type == 'M')){
-					alert('잘못된 요청입니다!');
-					return;
-				} else {
-					var header = $("meta[name='_csrf_header']").attr('content');
-					var token = $("meta[name='_csrf']").attr('content');
-					$.ajax({
-						type: 'POST',
-						url: '/auth/add/quest',
-						data: {detail: data, qDiv: type},
-						traditional: true,
-						beforeSend: function(xhr){
-							xhr.setRequestHeader(header, token);
-						},
-						success: function(res){
-							if(res.resultCode == 'N'){
-								alert('잘못된 요청입니다!');
-								return;
-							} else if(res.resultCode == 'ERROR'){
-								alert('[에러] 잠시 후 다시 시도해주세요!');
-								return;
-							} else if(res.resultCode == 'Y') {
-								var list = res.list;
-								var html = '';
-								for(var i = 0; i < list.length; i++) {
-									html += '<tr><td><span>' + list[i].qc_content + '</span><button class="btn btn-info btn-circle btn-sm"><i class="fas fa-info-circle"></i></button></td>';
-									html += '<td>'
-									if(list[i].qc_compl_yn == 'Y'){
-										html += '<div class="bg-success text-white p-1 rotate-n-15 d-inline-block float-right">Cleared!</div>';
-									}
-									html += '</td><td><button class="btn btn-success btn-circle btn-sm float-right"';
-									if(list[i].qc_compl_yn == 'Y'){
-										html += ' disabled="disabled"';
-									}
-									html += '><i class="fas fa-check"></i></button></td></tr>';
-								}
-								tbody.html(html);
-							}
-						}
-					});
-				}
-			});
-		</script>
+		<script th:src="@{/resources/js/custom/quest-quests.js}"></script>
 	</th:block>
 	
 	<div class="container-fluid" layout:fragment="content">
@@ -98,7 +38,7 @@
                                        		<button class="btn btn-primary btn-circle btn-sm add" btn-type="D">
 				                               <i class="fas fa-plus"></i>
 				                           </button>
-				                           <button class="btn btn-warning btn-circle btn-sm">
+				                           <button class="btn btn-warning btn-circle btn-sm get" btn-type="D">
 				                               <i class="fas fa-edit"></i>
 				                           </button>
                                        </th>
@@ -108,6 +48,23 @@
 									<tr th:if="${#lists.size(daily) == 0}">
 										<td colspan="3">작성한 일일 퀘스트가 없습니다</td>
 									</tr>
+<!-- 									<tr> -->
+<!-- 						            	<td colspan="3"> -->
+<!-- 						            		<textarea class="form-control" rows="3"></textarea> -->
+<!-- 						            		<div class="form-group"> -->
+<!-- 							            		<div class="form-check form-check-inline"> -->
+<!-- 							                		<input class="form-check-input cleared" type="checkbox" value="Y" name="cleared" id="cleared"> -->
+<!-- 													<label class="form-check-label" for="cleared">클리어</label> -->
+<!-- 												</div> -->
+<!-- 							            		<div class="form-check form-check-inline"> -->
+<!-- 							                		<input class="form-check-input deleted" type="checkbox" value="Y" name="deleted" id="deleted"> -->
+<!-- 													<label class="form-check-label" for="deleted">삭제</label> -->
+<!-- 												</div> -->
+<!-- 											</div> -->
+<!-- 											<button class="btn btn-primary btn-sm edit">저장</button> -->
+<!-- 											<button class="btn btn-dark btn-sm cancel">취소</button> -->
+<!-- 						            	</td> -->
+<!-- 						            </tr> -->
                                     <tr th:each="item : ${daily}">
                                        <td>
                                        		<span th:text="${item.qc_content}"></span>
@@ -119,7 +76,7 @@
                                        		<div th:if="${item.qc_compl_yn == 'Y'}" class="bg-success text-white p-1 rotate-n-15 d-inline-block float-right">Cleared!</div>
                                        </td>
                                        <td>
-                                           <button class="btn btn-success btn-circle btn-sm float-right" th:disabled="${item.qc_compl_yn == 'Y'}">
+                                           <button class="btn btn-success btn-circle btn-sm float-right cleared" th:disabled="${item.qc_compl_yn == 'Y'}" th:attr="qc-id=${item.qc_id}">
                                                <i class="fas fa-check"></i>
                                            </button>
                                        </td>
@@ -152,7 +109,7 @@
                                        		<button class="btn btn-primary btn-circle btn-sm add" btn-type="W">
 				                               <i class="fas fa-plus"></i>
 				                           </button>
-				                           <button class="btn btn-warning btn-circle btn-sm">
+				                           <button class="btn btn-warning btn-circle btn-sm get" btn-type="W">
 				                               <i class="fas fa-edit"></i>
 				                           </button>
                                        </th>
@@ -173,7 +130,7 @@
                                        		<div th:if="${item.qc_compl_yn == 'Y'}" class="bg-success text-white p-1 rotate-n-15 d-inline-block float-right">Cleared!</div>
                                        </td>
                                        <td>
-                                           <button class="btn btn-success btn-circle btn-sm float-right" th:attr="${item.qc_compl_yn == 'Y'} ? disabled='disabled'">
+                                           <button class="btn btn-success btn-circle btn-sm float-right cleared" th:disabled="${item.qc_compl_yn == 'Y'}" th:attr="qc-id=${item.qc_id}">
                                                <i class="fas fa-check"></i>
                                            </button>
                                        </td>
@@ -202,7 +159,7 @@
                                        		<button class="btn btn-primary btn-circle btn-sm add" btn-type="M">
 				                               <i class="fas fa-plus"></i>
 				                           </button>
-				                           <button class="btn btn-warning btn-circle btn-sm">
+				                           <button class="btn btn-warning btn-circle btn-sm get" btn-type="M">
 				                               <i class="fas fa-edit"></i>
 				                           </button>
                                        </th>
@@ -223,7 +180,7 @@
                                        		<div th:if="${item.qc_compl_yn == 'Y'}" class="bg-success text-white p-1 rotate-n-15 d-inline-block float-right">Cleared!</div>
                                        </td>
                                        <td>
-                                           <button class="btn btn-success btn-circle btn-sm float-right" th:attr="${item.qc_compl_yn == 'Y'} ? disabled='disabled'">
+                                           <button class="btn btn-success btn-circle btn-sm float-right cleared" th:disabled="${item.qc_compl_yn == 'Y'}" th:attr="qc-id=${item.qc_id}">
                                                <i class="fas fa-check"></i>
                                            </button>
                                        </td>
@@ -261,19 +218,11 @@
 			</div>
 		</div>
 		
-		
-		
-		
-		
-		
-		
-		
-		
 		<div class="modal fade" id="questModal" tabindex="-1" aria-labelledby="questModalLabel" aria-hidden="true">
 		  <div class="modal-dialog modal-dialog-centered">
 		    <div class="modal-content">
 		      <div class="modal-header">
-		        <h5 class="modal-title" id="questModalLabel">댓글</h5>
+		        <h5 class="modal-title" id="questModalLabel">수정</h5>
 		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
 		          <span aria-hidden="true">&times;</span>
 		        </button>

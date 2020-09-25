@@ -36,14 +36,14 @@ public interface QuestMapper {
 	public String getQuestInfo(Map map);
 	
 	/**
-	 * 퀘스트 수정
-	 */
-	public void modifyQuest(List list);
-	
-	/**
 	 * 퀘스트 1개 완료
 	 */
 	public void clearedOneQuest(Long qc_id);
+	
+	/**
+	 * 퀘스트 수정
+	 */
+	public void modifyQuest(List list);
 	
 	/**
 	 * 퀘스트 수 확인

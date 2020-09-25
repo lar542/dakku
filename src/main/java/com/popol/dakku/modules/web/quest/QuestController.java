@@ -41,17 +41,23 @@ public class QuestController {
 		
 		//다이어리
 		
-		
+		LocalDate today = LocalDate.now();
 		//일일
 		params.put("q_div", "D");
+		LocalDate tomorrow = today.plusDays(1);
+		params.put("q_d_date", tomorrow);
 		List daily = questMapper.getQuestList(params);
 		model.addAttribute("daily", daily);
 		//주간
 		params.put("q_div", "W");
+		LocalDate monDay = today.plusDays(8 - today.getDayOfWeek().getValue());
+		params.put("q_wm_end", monDay);
 		List weekly = questMapper.getQuestList(params);
 		model.addAttribute("weekly", weekly);
 		//월간
 		params.put("q_div", "M");
+		LocalDate nextFirstDate = today.with(TemporalAdjusters.firstDayOfNextMonth());
+		params.put("q_wm_end", nextFirstDate);
 		List monthly = questMapper.getQuestList(params);
 		model.addAttribute("monthly", monthly);
 		return "quest/quest";
@@ -95,45 +101,49 @@ public class QuestController {
 		if(q_id != null) {
 			params.put("detail", detail);
 			questMapper.addQuestDetail(params);
-			
-			List qList = null;
-			if(qDiv.equals("D")) {
-				params.put("q_div", "D");
-				qList = questMapper.getQuestList(params);
-			} else if(qDiv.equals("W")) {
-				params.put("q_div", "W");
-				qList = questMapper.getQuestList(params);
-			} else if(qDiv.equals("M")) {
-				params.put("q_div", "M");
-				qList = questMapper.getQuestList(params);
-			}
+			List qList = questMapper.getQuestList(params);
 			result.put("list", qList);
 			result.put("resultCode", "Y");
 		}
 		return result;
 	}
 	
-	@GetMapping("/auth/get/quest")
+	@PostMapping(value = "/auth/cleared/quest", produces = "application/text;charset=utf8")
+	@ResponseBody
+	public void cleared(@RequestParam Long qcId) {
+		questMapper.clearedOneQuest(qcId);
+	}
+	
+	@GetMapping(value = "/auth/get/quest", produces = "application/json;charset=utf8")
 	@ResponseBody
 	public List quests(@RequestParam String qDiv) {
 		UserVO userVO = (UserVO) UserDetailsHelper.getAuthenticatedUser();
 		Map params = new HashMap();
 		params.put("u_id", userVO.getU_id());
 		params.put("q_div", qDiv);
+		
+		LocalDate today = LocalDate.now();
+		if(qDiv.equals("D")) {
+			LocalDate tomorrow = today.plusDays(1);
+			params.put("q_d_date", tomorrow);
+		} else if(qDiv.equals("W")) {
+			LocalDate monDay = today.plusDays(8 - today.getDayOfWeek().getValue());
+			params.put("q_wm_start", today);
+			params.put("q_wm_end", monDay);
+		} else if(qDiv.equals("M")) {
+			LocalDate nextFirstDate = today.with(TemporalAdjusters.firstDayOfNextMonth());
+			params.put("q_wm_start", today);
+			params.put("q_wm_end", nextFirstDate);
+		}
 		return questMapper.getQuestList(params);
 	}
 	
 	@PostMapping("/auth/modify/quest")
 	@ResponseBody
 	public void modify(@RequestParam List list) {
-//		questMapper.addQuestDetail(list);
+		questMapper.modifyQuest(list);
 	}
 	
-	@PostMapping("/auth/cleared/quest")
-	@ResponseBody
-	public void cleared(@RequestParam Long qcId) {
-		questMapper.clearedOneQuest(qcId);
-	}
 }
 
 
