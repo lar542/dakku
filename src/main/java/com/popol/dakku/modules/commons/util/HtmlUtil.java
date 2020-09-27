@@ -1,5 +1,6 @@
 package com.popol.dakku.modules.commons.util;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -125,4 +126,41 @@ public class HtmlUtil {
 		return buffer.toString();
 	}
 	
+	public static String dateHtml(List<Map> log) {
+		StringBuffer buffer = new StringBuffer("<div class=\"btn-group-vertical mr-1\">");
+		for (int i = 0; i < log.size(); i++) {
+			buffer.append("<button data-toggle=\"tooltip\" data-placement=\"top\" title=\"")
+				.append(log.get(i).get("dates")).append(" (").append(log.get(i).get("cnt")).append(")\" ");
+			if(log.get(i).get("cnt").toString().equals("0")) {
+				buffer.append("class=\"btn mb-1 btn-light\">");
+			} else {
+				buffer.append("class=\"btn mb-1 btn-primary\">");
+			}
+			if((i + 1) % 7 == 0) {
+				buffer.append("</div>");
+				if(i < log.size() - 1) {
+					buffer.append("<div class=\"btn-group-vertical mr-1\">");
+				}
+			}
+		}
+		return buffer.toString();
+	}
+	
+	public static String thisWeekHtml(List<Map> log, boolean flag) {
+		String visibility = " ";
+		if(flag) {
+			visibility = " style=\"visibility: hidden;\" ";
+		}
+		StringBuffer buffer = new StringBuffer();
+		for (int i = 0; i < log.size(); i++) {
+			buffer.append("<button data-toggle=\"tooltip\" data-placement=\"top\" title=\"")
+				.append(log.get(i).get("dates")).append(" (").append(log.get(i).get("cnt")).append(")\"").append(visibility);
+			if(log.get(i).get("cnt").toString().equals("0")) {
+				buffer.append("class=\"btn mb-1 btn-light\">");
+			} else {
+				buffer.append("class=\"btn mb-1 btn-primary\">");
+			}
+		}
+		return buffer.toString();
+	}
 }

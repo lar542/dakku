@@ -5,6 +5,24 @@
 
 <mapper namespace="com.popol.dakku.modules.web.quest.QuestMapper">
 
+	<select id="getQuestLog" parameterType="HashMap" resultType="HashMap">
+		with all_dates(dates) as
+		(
+			SELECT
+				@date := DATE_ADD(@date, INTERVAL 1 DAY) AS dates
+			FROM mysql.help_relation , (SELECT @date:= DATE_SUB(#{start_date}, INTERVAL 1 DAY)) d
+			WHERE @date BETWEEN @date AND DATE_SUB(#{end_date}, INTERVAL 1 DAY)
+		)
+		select 
+			dates,
+		    count(qc_compl_yn) as cnt
+		from all_dates ad
+		left outer join quest_content qc 
+		on (date_format(qc.updated_at, '%Y-%m-%d') = ad.dates and qc_compl_yn = 'Y' and u_id = #{u_id})
+		group by dates
+		order by dates;
+	</select>
+
 	<select id="getQuestList" parameterType="HashMap" resultType="HashMap">
 		select
 			q.q_id,
@@ -19,7 +37,7 @@
 			qc_compl_yn
 		from quest q
 		left join quest_content qc on (qc.q_id = q.q_id)
-		where u_id = #{u_id}
+		where q.u_id = #{u_id}
 		and q_div = #{q_div}
 		<if test='q_div.equals("D")'>
 		and q_d_date = #{q_d_date}
@@ -35,10 +53,10 @@
 	</insert>
 	
 	<insert id="addQuestDetail" parameterType="HashMap">
-		insert into quest_content (qc_content, q_id)
+		insert into quest_content (qc_content, q_id, u_id)
 		values
 		<foreach collection="detail" item="item" separator=",">
-			(#{item}, #{q_id})
+			(#{item}, #{q_id}, #{u_id})
 		</foreach> 
 	</insert>
 	
@@ -88,7 +106,7 @@
 			count(*) as cnt
 		from quest q
 		left join quest_content qc on (qc.q_id = q.q_id)
-		where u_id = #{u_id}
+		where q.u_id = #{u_id}
 		and q_div = #{q_div}
 		group by qc_compl_yn
 	</select>

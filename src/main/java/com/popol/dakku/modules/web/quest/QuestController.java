@@ -1,8 +1,8 @@
 package com.popol.dakku.modules.web.quest;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.popol.dakku.modules.commons.auth.UserDetailsHelper;
 import com.popol.dakku.modules.commons.auth.vo.UserVO;
+import com.popol.dakku.modules.commons.util.HtmlUtil;
 import com.popol.dakku.modules.web.post.PostMapper;
 
 @Controller
@@ -38,10 +39,27 @@ public class QuestController {
 		params.put("u_id", userVO.getU_id());
 		
 		//퀘스트 로그
+		LocalDate today = LocalDate.now();
+		int todayDay = today.getDayOfWeek().getValue();
+		LocalDate start_date = today.minusDays(364 + todayDay - 1);
+		LocalDate end_date = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
+		params.put("start_date", start_date);
+		params.put("end_date", end_date);
+		//이번주를 제외한 주
+		List<Map> log = questMapper.getQuestLog(params);
+		model.addAttribute("preWeek", HtmlUtil.dateHtml(log));
+		//이번주
+		params.put("start_date", end_date.plusDays(1));
+		LocalDate nextDay = today.plusDays(1);
+		params.put("end_date", nextDay);
+		List thisWeek_1 = questMapper.getQuestLog(params);
+		params.put("start_date", nextDay.plusDays(1));
+		params.put("end_date", today.with(TemporalAdjusters.next(DayOfWeek.SUNDAY)));
+		List thisWeek_2 = questMapper.getQuestLog(params);
+		model.addAttribute("thisWeek", HtmlUtil.thisWeekHtml(thisWeek_1, false) + HtmlUtil.thisWeekHtml(thisWeek_2, true));
 		
 		//다이어리
 		
-		LocalDate today = LocalDate.now();
 		//일일
 		params.put("q_div", "D");
 		LocalDate tomorrow = today.plusDays(1);
@@ -61,6 +79,10 @@ public class QuestController {
 		List monthly = questMapper.getQuestList(params);
 		model.addAttribute("monthly", monthly);
 		return "quest/quest";
+	}
+	
+	private void setDate() {
+		
 	}
 	
 	@PostMapping(value = "/auth/add/quest", produces = "application/json;charset=utf8")

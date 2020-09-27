@@ -9,12 +9,33 @@
 	
 	<th:block layout:fragment="custom-js">
 		<script th:src="@{/resources/js/custom/quest-quests.js}"></script>
+		<script>
+		$(function () {
+	        $('[data-toggle="tooltip"]').tooltip();
+	    });
+		</script>
 	</th:block>
 	
 	<div class="container-fluid" layout:fragment="content">
 		<div class="d-sm-flex align-items-center justify-content-between mb-4">
 			<h1 class="h3 mb-0 text-gray-800" th:text=${pageinfo.menu_nm}>게시판 이름</h1>
 			<a th:href="@{/auth/post/write/}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-pen fa-sm text-white-50"></i> 글쓰기</a>
+		</div>
+		
+		<div class="row">
+			<div class="col-lg">
+				<div class="card shadow mb-4">
+					<!-- Card Header -->
+					<div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    	<h6 class="m-0 font-weight-bold text-primary">퀘스트 로그</h6>
+	                </div>
+					<!-- Card Body -->
+					<div class="card-body" style="overflow-x: auto; white-space: nowrap;">
+						<span th:utext="${preWeek}"></span>
+						<div class="btn-group-vertical mr-1" th:utext="${thisWeek}"></div>
+					</div>
+				</div>
+			</div>
 		</div>
 		
 		<div class="row">
@@ -195,17 +216,6 @@
            <!-- Right Card List -->
 
        </div>
-		
-		<div class="row">
-			<div class="col-lg">
-				<div class="card shadow mb-4">
-					<!-- Card Header -->
-					<div></div>
-					<!-- Card Body -->
-					<div></div>
-				</div>
-			</div>
-		</div>
 		
 		<div class="row">
 			<div class="col-lg">

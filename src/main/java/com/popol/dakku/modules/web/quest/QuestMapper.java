@@ -8,7 +8,7 @@ public interface QuestMapper {
 	/**
 	 * 퀘스트 로그 조회
 	 */
-	public List getQuestLog(Long u_id);
+	public List getQuestLog(Map map);
 	
 	/**
 	 * 다이어리 조회
