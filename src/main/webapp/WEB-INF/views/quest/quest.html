@@ -53,7 +53,7 @@
                            <table class="table" width="100%">
                                <thead>
                                    <tr>
-                                       <th>퀘스트 내용</th>
+                                       <th width="76%">퀘스트 내용</th>
                                        <th></th>
                                        <th class="text-right">
                                        		<button class="btn btn-primary btn-circle btn-sm add" btn-type="D">
@@ -69,29 +69,9 @@
 									<tr th:if="${#lists.size(daily) == 0}">
 										<td colspan="3">작성한 일일 퀘스트가 없습니다</td>
 									</tr>
-<!-- 									<tr> -->
-<!-- 						            	<td colspan="3"> -->
-<!-- 						            		<textarea class="form-control" rows="3"></textarea> -->
-<!-- 						            		<div class="form-group"> -->
-<!-- 							            		<div class="form-check form-check-inline"> -->
-<!-- 							                		<input class="form-check-input cleared" type="checkbox" value="Y" name="cleared" id="cleared"> -->
-<!-- 													<label class="form-check-label" for="cleared">클리어</label> -->
-<!-- 												</div> -->
-<!-- 							            		<div class="form-check form-check-inline"> -->
-<!-- 							                		<input class="form-check-input deleted" type="checkbox" value="Y" name="deleted" id="deleted"> -->
-<!-- 													<label class="form-check-label" for="deleted">삭제</label> -->
-<!-- 												</div> -->
-<!-- 											</div> -->
-<!-- 											<button class="btn btn-primary btn-sm edit">저장</button> -->
-<!-- 											<button class="btn btn-dark btn-sm cancel">취소</button> -->
-<!-- 						            	</td> -->
-<!-- 						            </tr> -->
                                     <tr th:each="item : ${daily}">
                                        <td>
                                        		<span th:text="${item.qc_content}"></span>
-											<button class="btn btn-info btn-circle btn-sm">
-											    <i class="fas fa-info-circle"></i>
-											</button>
                                        </td>
                                        <td>
                                        		<div th:if="${item.qc_compl_yn == 'Y'}" class="bg-success text-white p-1 rotate-n-15 d-inline-block float-right">Cleared!</div>
@@ -124,7 +104,7 @@
                            <table class="table" width="100%">
                                <thead>
                                    <tr>
-                                       <th>퀘스트 내용</th>
+                                       <th width="76%">퀘스트 내용</th>
                                        <th></th>
                                        <th class="text-right">
                                        		<button class="btn btn-primary btn-circle btn-sm add" btn-type="W">
@@ -143,9 +123,6 @@
                                     <tr th:each="item : ${weekly}">
                                        <td>
                                        		<span th:text="${item.qc_content}"></span>
-											<button class="btn btn-info btn-circle btn-sm">
-											    <i class="fas fa-info-circle"></i>
-											</button>
                                        </td>
                                        <td>
                                        		<div th:if="${item.qc_compl_yn == 'Y'}" class="bg-success text-white p-1 rotate-n-15 d-inline-block float-right">Cleared!</div>
@@ -174,7 +151,7 @@
                            <table class="table" width="100%">
                                <thead>
                                    <tr>
-                                       <th>퀘스트 내용</th>
+                                       <th width="76%">퀘스트 내용</th>
                                        <th></th>
                                        <th class="text-right">
                                        		<button class="btn btn-primary btn-circle btn-sm add" btn-type="M">
@@ -193,9 +170,6 @@
                                     <tr th:each="item : ${monthly}">
                                        <td>
                                        		<span th:text="${item.qc_content}"></span>
-											<button class="btn btn-info btn-circle btn-sm">
-											    <i class="fas fa-info-circle"></i>
-											</button>
                                        </td>
                                        <td>
                                        		<div th:if="${item.qc_compl_yn == 'Y'}" class="bg-success text-white p-1 rotate-n-15 d-inline-block float-right">Cleared!</div>
@@ -221,9 +195,22 @@
 			<div class="col-lg">
 				<div class="card shadow mb-4">
 					<!-- Card Header -->
-					<div></div>
+					<div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    	<h6 class="m-0 font-weight-bold text-primary">다이어리</h6>
+	                </div>
 					<!-- Card Body -->
-					<div></div>
+					<div class="card-body">
+						<div class="row row-cols-1 row-cols-md-6">
+							<div class="col mb-4" th:each="d : ${diarys}">
+	                          <div class="card h-100">
+	                            <img th:src="@{/resources/img/default/diray.jpg}" class="card-img-top" width="100%" height="180">
+	                            <div class="card-body">
+	                              <a href="#" class="text-decoration-none"><h5 class="card-title" th:text="${d.year}">Card title</h5></a>
+	                            </div>
+	                          </div>
+	                        </div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

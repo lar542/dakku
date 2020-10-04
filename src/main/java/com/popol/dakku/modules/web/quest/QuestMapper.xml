@@ -47,6 +47,15 @@
 		</if>
 	</select>
 	
+	<select id="getDiaryList" parameterType="Long" resultType="HashMap">
+		select 
+			ifnull(date_format(created_at, '%Y'), date_format(NOW(), '%Y')) as year
+		from quest 
+		where u_id = #{u_id}
+		group by year
+		order by year desc
+	</select>
+	
 	<insert id="addQuest" parameterType="HashMap" useGeneratedKeys="true" keyProperty="q_id">
 		insert into quest (q_div, q_d_date, q_wm_start, q_wm_end, u_id)
 		values (#{q_div}, #{q_d_date}, #{q_wm_start}, #{q_wm_end}, #{u_id})
@@ -82,20 +91,20 @@
 		where qc_id = #{qc_id}
 	</update>
 	
-	<update id="modifyQuest" parameterType="java.util.List">
+	<update id="modifyQuest" parameterType="Map">
 		<foreach collection="list" item="item" separator=";">
-			<if test="item.flag == 'D'">
+			<if test='item.flag.equals("D")'>
 				delete
 				from quest_content
-				and qc_id = #{item.qc_id}
+				where qc_id = #{item.qc_id}
 			</if>
-			<if test="item.flag == 'U'">
+			<if test='item.flag.equals("U")'>
 				update quest_content
 				set
 					qc_content = #{item.qc_content},
 					qc_compl_yn = #{item.qc_compl_yn},
 					updated_at = NOW()
-				and qc_id = #{item.qc_id}
+				where qc_id = #{item.qc_id}
 			</if>
 		</foreach>
 	</update>

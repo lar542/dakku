@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,13 +18,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.popol.dakku.modules.commons.auth.UserDetailsHelper;
 import com.popol.dakku.modules.commons.auth.vo.UserVO;
 import com.popol.dakku.modules.commons.util.HtmlUtil;
 import com.popol.dakku.modules.web.post.PostMapper;
 
 @Controller
-@Transactional
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
 public class QuestController {
 	
 	@Resource(name = "postMapper")
@@ -58,8 +61,6 @@ public class QuestController {
 		List thisWeek_2 = questMapper.getQuestLog(params);
 		model.addAttribute("thisWeek", HtmlUtil.thisWeekHtml(thisWeek_1, false) + HtmlUtil.thisWeekHtml(thisWeek_2, true));
 		
-		//다이어리
-		
 		//일일
 		params.put("q_div", "D");
 		LocalDate tomorrow = today.plusDays(1);
@@ -78,11 +79,12 @@ public class QuestController {
 		params.put("q_wm_end", nextFirstDate);
 		List monthly = questMapper.getQuestList(params);
 		model.addAttribute("monthly", monthly);
-		return "quest/quest";
-	}
-	
-	private void setDate() {
 		
+		//다이어리
+		List diarys = questMapper.getDiaryList(userVO.getU_id());
+		model.addAttribute("diarys", diarys);
+		
+		return "quest/quest";
 	}
 	
 	@PostMapping(value = "/auth/add/quest", produces = "application/json;charset=utf8")
@@ -92,21 +94,9 @@ public class QuestController {
 		UserVO userVO = (UserVO) UserDetailsHelper.getAuthenticatedUser();
 		Map params = new HashMap();
 		params.put("u_id", userVO.getU_id());
-		
-		LocalDate today = LocalDate.now();
 		params.put("q_div", qDiv);
-		if(qDiv.equals("D")) {
-			LocalDate tomorrow = today.plusDays(1);
-			params.put("q_d_date", tomorrow);
-		} else if(qDiv.equals("W")) {
-			LocalDate monDay = today.plusDays(8 - today.getDayOfWeek().getValue());
-			params.put("q_wm_start", today);
-			params.put("q_wm_end", monDay);
-		} else if(qDiv.equals("M")) {
-			LocalDate nextFirstDate = today.with(TemporalAdjusters.firstDayOfNextMonth());
-			params.put("q_wm_start", today);
-			params.put("q_wm_end", nextFirstDate);
-		} else {
+		setDWMDate(params);
+		if(!(qDiv.equals("D") || qDiv.equals("W") || qDiv.equals("M"))) {
 			result.put("resultCode", "N");
 			return result;
 		}
@@ -143,7 +133,21 @@ public class QuestController {
 		Map params = new HashMap();
 		params.put("u_id", userVO.getU_id());
 		params.put("q_div", qDiv);
-		
+		setDWMDate(params);
+		return questMapper.getQuestList(params);
+	}
+	
+	@PostMapping(value = "/auth/modify/quest", produces = "application/json;charset=utf8")
+	@ResponseBody
+	public void modify(@RequestParam Map params) throws Exception {
+		String json = params.get("list").toString();
+		ObjectMapper mapper = new ObjectMapper();
+		List list = mapper.readValue(json, new TypeReference<List<Map<String, Object>>>(){});
+		questMapper.modifyQuest(list);
+	}
+	
+	private void setDWMDate(Map params) {
+		String qDiv = params.get("q_div").toString();
 		LocalDate today = LocalDate.now();
 		if(qDiv.equals("D")) {
 			LocalDate tomorrow = today.plusDays(1);
@@ -157,15 +161,7 @@ public class QuestController {
 			params.put("q_wm_start", today);
 			params.put("q_wm_end", nextFirstDate);
 		}
-		return questMapper.getQuestList(params);
 	}
-	
-	@PostMapping("/auth/modify/quest")
-	@ResponseBody
-	public void modify(@RequestParam List list) {
-		questMapper.modifyQuest(list);
-	}
-	
 }
 
 

@@ -9,16 +9,16 @@ public interface QuestMapper {
 	 * 퀘스트 로그 조회
 	 */
 	public List getQuestLog(Map map);
-	
-	/**
-	 * 다이어리 조회
-	 */
-	public List getDiaryList(Long u_id);
 
 	/**
 	 * 일일/주간/월간 퀘스트 조회 
 	 */
 	public List getQuestList(Map map);
+	
+	/**
+	 * 다이어리 조회
+	 */
+	public List getDiaryList(Long u_id);
 	
 	/**
 	 * 퀘스트 추가
