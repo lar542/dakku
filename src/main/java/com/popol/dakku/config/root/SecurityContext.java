@@ -22,8 +22,8 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
-import com.popol.dakku.modules.commons.auth.CustomOAuth2UserService;
 import com.popol.dakku.modules.commons.auth.oauth2.CustomOAuth2Provider;
+import com.popol.dakku.modules.commons.auth.service.CustomOAuth2UserService;
 
 @Configuration
 @PropertySource("classpath:application-oauth.properties")
