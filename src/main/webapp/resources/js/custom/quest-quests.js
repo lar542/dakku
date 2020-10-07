@@ -32,6 +32,11 @@ function getQuests(th, flag){
 		url: '/auth/get/quest',
 		data: 'qDiv=' + type,
 		success: function(res){
+			if(res.length == 0){
+				alert('작성한 퀘스트가 없습니다');
+				th.prev('button').attr('disabled', false);
+				return;
+			}
 			var html = '';
 			if(flag == 'get'){
 				html = getMakeHtml(res, type);
@@ -175,17 +180,36 @@ function getMakeHtml(list, type){
 	html += '<tr><td colspan="3"><button class="btn btn-primary btn-sm mr-1 edit" btn-type='+type+'>저장</button><button class="btn btn-dark btn-sm cancel" btn-type='+type+'>취소</button></td></tr>';
 	return html;
 }
-function questLog(){
+$('.btn-date').click(function(){
+	var title = $(this).attr('data-original-title');
+	var cnt = title.substring(12, title.length - 1);
+	if(Number(cnt) == 0) {
+		alert('완료한 퀘스트가 없습니다!');
+		return
+	}
+	var date = title.substr(0, 10).split('-');
+	if(!(date[0].length == 4 && date[1].length == 2 && date[2].length == 2)){
+		alert('잘못된 요청입니다!');
+		return;
+	}
 	$.ajax({
 		type: 'GET',
-		url: '',
+		url: '/auth/get/cleared/quest',
+		data: {'year': date[0], 'month': date[1], 'dayOfMonth': date[2]},
 		success: function(res){
+			if(res == 'null' || res.length == 0){
+				alert('잘못된 요청입니다!');
+				return;
+			}
 			var html = '';
 			for(var i = 0; i < res.length; i++){
-				html += '<div class="btn-group-vertical mr-1">';
-				html += '</div>';
-				
+				html += '<tr><td>' + res[i].q_div_nm + '</td><td>' + res[i].qc_content + '</td><td>' + res[i].completed_at + '</td></tr>'; 
 			}
+			$('#completed-quests-tbody').html(html);
+			$('#questModal').modal('show');
 		}
 	});
-}
+});
+$('#questModal').on('hide.bs.modal', function(){
+	$('#completed-quests-tbody').empty();
+});

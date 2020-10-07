@@ -205,7 +205,7 @@
 	                          <div class="card h-100">
 	                            <img th:src="@{/resources/img/default/diray.jpg}" class="card-img-top" width="100%" height="180">
 	                            <div class="card-body">
-	                              <a href="#" class="text-decoration-none"><h5 class="card-title" th:text="${d.year}">Card title</h5></a>
+	                              <a th:href="${'/auth/inven/diary?type=default&code=' + d.year}" class="text-decoration-none"><h5 class="card-title" th:text="${d.year}">Card title</h5></a>
 	                            </div>
 	                          </div>
 	                        </div>
@@ -216,24 +216,30 @@
 		</div>
 		
 		<div class="modal fade" id="questModal" tabindex="-1" aria-labelledby="questModalLabel" aria-hidden="true">
-		  <div class="modal-dialog modal-dialog-centered">
+		  <div class="modal-dialog modal-dialog-centered modal-lg">
 		    <div class="modal-content">
 		      <div class="modal-header">
-		        <h5 class="modal-title" id="questModalLabel">수정</h5>
+		        <h5 class="modal-title" id="questModalLabel">완료한 퀘스트 조회</h5>
 		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
 		          <span aria-hidden="true">&times;</span>
 		        </button>
 		      </div>
 		      <div class="modal-body">
-		        <form th:action="@{/auth/modify/comment}" method="post" id="modalForm">
-		        	<input type="hidden" name="cmId">
-		        	<input type="hidden" name="cmParent">
-		          	<textarea class="summernote" id="modal-summernote" name="cmContent" required="required"></textarea>
-		        </form>
+		      	<div class="table-responsive">
+                     <table class="table" width="100%">
+                         <thead>
+                             <tr>
+                             	 <th>구분</th>
+                                 <th>내용</th>
+                                 <th>완료일</th>
+                             </tr>
+                         </thead>
+                         <tbody id="completed-quests-tbody"></tbody>
+                     </table>
+                 </div>
 		      </div>
 		      <div class="modal-footer">
 		        <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
-		        <button type="button" class="btn btn-primary" id="modal-save">등록</button>
 		      </div>
 		    </div>
 		  </div>

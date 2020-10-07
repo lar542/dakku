@@ -109,15 +109,19 @@
 		</foreach>
 	</update>
 	
-	<select id="getQuestCnt" parameterType="HashMap" resultType="HashMap">
+	<select id="getCompletedQuests" parameterType="HashMap" resultType="HashMap">
 		select
-			qc_compl_yn,
-			count(*) as cnt
-		from quest q
-		left join quest_content qc on (qc.q_id = q.q_id)
+			qc_id,
+			case
+				when q_div = 'D' then '일일'
+		        when q_div = 'W' then '주간'
+		        else '월간'
+			end as q_div_nm,
+			qc_content,
+			date_format(qc.updated_at, '%Y-%m-%d %H:%i') as completed_at
+		from quest q left join quest_content qc on (qc.q_id = q.q_id)
 		where q.u_id = #{u_id}
-		and q_div = #{q_div}
-		group by qc_compl_yn
+		and qc_compl_yn = 'Y' 
+		and qc.updated_at like concat(#{year}, '-', #{month}, '-', #{dayOfMonth}, '%')
 	</select>
-	
 </mapper>

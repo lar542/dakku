@@ -46,7 +46,12 @@ public interface QuestMapper {
 	public void modifyQuest(List list);
 	
 	/**
-	 * 퀘스트 수 확인
+	 * 해당 일자에 완료한 퀘스트 조회
 	 */
-	public List getQuestCnt(Map map);
+	public List getCompletedQuests(Map map);
+	
+	/**
+	 * 
+	 */
+	
 }

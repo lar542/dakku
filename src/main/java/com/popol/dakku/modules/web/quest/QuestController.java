@@ -3,12 +3,14 @@ package com.popol.dakku.modules.web.quest;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -162,6 +164,39 @@ public class QuestController {
 			params.put("q_wm_end", nextFirstDate);
 		}
 	}
+	
+	@GetMapping(value = "/auth/get/cleared/quest", produces = "application/json;charset=utf8")
+	@ResponseBody
+	public List completedQuests(@RequestParam Map params) {
+		UserVO userVO = (UserVO) UserDetailsHelper.getAuthenticatedUser();
+		params.put("u_id", userVO.getU_id());
+		
+		String year = params.get("year").toString();
+		String month = params.get("month").toString();
+		String dayOfMonth = params.get("dayOfMonth").toString();
+		
+		if(StringUtils.isNumeric(year) && StringUtils.isNumeric(month) && StringUtils.isNumeric(dayOfMonth)) {
+			if(year.length() == 4 && month.length() == 2 && dayOfMonth.length() == 2) {
+				params.put("year", year);
+				params.put("month", month);
+				params.put("dayOfMonth", dayOfMonth);
+				return questMapper.getCompletedQuests(params);
+			}
+		}
+		return null;
+	}
+	
+	@GetMapping("/auth/inven/diary")
+	public String diary(@RequestParam String type, @RequestParam String code) {
+		if(type.equals("default")) { //기본 다이어리
+			return "quest/default-diary";
+		} else {
+			
+		}
+		return null;
+	}
+	
+	
 }
 
 
