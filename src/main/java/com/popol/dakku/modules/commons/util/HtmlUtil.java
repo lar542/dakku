@@ -132,9 +132,9 @@ public class HtmlUtil {
 			buffer.append("<button data-toggle=\"tooltip\" data-placement=\"top\" title=\"")
 				.append(log.get(i).get("dates")).append(" (").append(log.get(i).get("cnt")).append(")\" ");
 			if(log.get(i).get("cnt").toString().equals("0")) {
-				buffer.append("class=\"btn mb-1 btn-light\">");
+				buffer.append("class=\"btn mb-1 btn-light btn-date\">");
 			} else {
-				buffer.append("class=\"btn mb-1 btn-primary\">");
+				buffer.append("class=\"btn mb-1 btn-primary btn-date\">");
 			}
 			if((i + 1) % 7 == 0) {
 				buffer.append("</div>");
@@ -156,9 +156,9 @@ public class HtmlUtil {
 			buffer.append("<button data-toggle=\"tooltip\" data-placement=\"top\" title=\"")
 				.append(log.get(i).get("dates")).append(" (").append(log.get(i).get("cnt")).append(")\"").append(visibility);
 			if(log.get(i).get("cnt").toString().equals("0")) {
-				buffer.append("class=\"btn mb-1 btn-light\">");
+				buffer.append("class=\"btn mb-1 btn-light btn-date\">");
 			} else {
-				buffer.append("class=\"btn mb-1 btn-primary\">");
+				buffer.append("class=\"btn mb-1 btn-primary btn-date\">");
 			}
 		}
 		return buffer.toString();

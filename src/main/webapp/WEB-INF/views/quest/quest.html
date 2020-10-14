@@ -203,7 +203,7 @@
 						<div class="row row-cols-1 row-cols-md-6">
 							<div class="col mb-4" th:each="d : ${diarys}">
 	                          <div class="card h-100">
-	                            <img th:src="@{/resources/img/default/diray.jpg}" class="card-img-top" width="100%" height="180">
+	                            <img th:src="@{/resources/img/diary/default-cover.png}" class="card-img-top" width="100%" height="180">
 	                            <div class="card-body">
 	                              <a th:href="${'/auth/inven/diary?type=default&code=' + d.year}" class="text-decoration-none"><h5 class="card-title" th:text="${d.year}">Card title</h5></a>
 	                            </div>
