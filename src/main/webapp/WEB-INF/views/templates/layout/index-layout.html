@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+	layout:decorate="~{templates/layout/default-layout}">
+	
+	<th:block layout:fragment="custom-css"></th:block>
+	
+	<th:block layout:fragment="custom-js">
+		<th:block layout:fragment="dakku-js"></th:block>
+	</th:block>
+	
+	<div class="container-fluid" layout:fragment="content">
+		<div class="d-sm-flex align-items-center justify-content-between mb-4">
+        	<h1 class="h3 mb-0 text-gray-800">Home</h1>
+       	</div>
+		
+		<div class="row">
+			<div class="col">
+				<div class="card shadow mb-4">
+					<div class="card-header py-3">
+		               <h6 class="m-0 font-weight-bold text-primary">다꾸 체험</h6>
+		             </div>
+		             <div layout:fragment="dakku-item"></div>
+				</div>
+			</div>
+	    </div>
+		<th:block layout:fragment="dakku-palette"></th:block>
+	</div>
+	
+</html>

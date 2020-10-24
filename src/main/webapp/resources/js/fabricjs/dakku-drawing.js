@@ -13,10 +13,11 @@
       clearEl = $('clear-canvas'),
       drawingRemoveSelected = $('remove-selected');
 
-  //전부 지우기 버튼 설정
+  //전체 지우기 버튼 설정
   clearEl.onclick = function() {
 	  if(confirm('현재 캔버스를 비우시겠습니까?')){
 		  canvas.clear();
+		  canvas.setBackgroundImage(imgUrl, canvas.renderAll.bind(canvas));
 	  }
   };
 
@@ -24,7 +25,7 @@
   drawingRemoveSelected.onclick = function() { 
     var activeObjects = canvas.getActiveObjects();
     if (activeObjects) {
-      activeObjects.forEach(function(object) {
+    	activeObjects.forEach(function(object) {
         canvas.remove(object);
       });
     }

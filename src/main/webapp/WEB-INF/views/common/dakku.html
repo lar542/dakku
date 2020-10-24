@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html 
+	xmlns:th="http://www.thymeleaf.org" 
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+	layout:decorate="~{templates/layout/index-layout}">
+	
+	<th:block layout:fragment="dakku-js">
+		<script type="text/javascript" th:src="@{/resources/js/fabricjs/fabric.js}"></script>
+		<script>
+			var imgUrl = '/resources/img/diary/default-paper.png';
+			var canvas = this.__canvas = new fabric.Canvas('canvas', {
+				isDrawingMode: false,
+				backgroundImage: imgUrl,
+				width: 900, height: 574
+		    });
+		</script>
+		<script type="text/javascript" th:src="@{/resources/js/fabricjs/utils.js}"></script>
+		<script type="text/javascript" th:src="@{/resources/js/fabricjs/controller.js}"></script>
+		<script type="text/javascript" th:src="@{/resources/js/fabricjs/dakku-drawing.js}"></script>
+		<script type="text/javascript" th:src="@{/resources/js/fabricjs/dakku-font.js}"></script>
+	</th:block>
+	
+	<div class="card-body" layout:fragment="dakku-item">
+		<div class="row">
+          	<div class="col-2">
+         		<div class="card mb-4 shadow-sm">
+         			<div class="card-header">
+	       				<h5 class="my-0 font-weight-normal">심플 스티커</h4>
+		      		</div>
+			      	<div class="card-body text-center">
+			      		<div class="row">
+		      				<button class="btn col" id="circle">
+			      				<i class="fas fa-circle fa-5x text-primary"></i>
+			      				<p class="font-weight-bold">circle</p>
+		      				</button>
+		      				<button class="btn col" id="square">
+			      				<i class="fas fa-square-full fa-5x text-primary"></i>
+			      				<p class="font-weight-bold">square</p>	
+		      				</button>
+			      		</div>
+			      		<div class="row">
+							<button class="btn col sticker-btn" type="simple">
+			      				<i class="fas fa-heart fa-5x text-danger"></i>
+			      				<p class="font-weight-bold">heart</p>
+			      			</button>
+			      			<button class="btn col sticker-btn" type="simple">
+			      				<i class="fas fa-star fa-5x text-warning"></i>
+			      				<p class="font-weight-bold">star</p>
+			      			</button>
+			      		</div>
+			      		<div class="row">
+			      			<button class="btn col" id="arrow">
+			      				<i class="fas fa-long-arrow-alt-right fa-5x text-dark"></i>
+			      				<p class="font-weight-bold">arrow</p>
+		      				</button>
+		      				<button class="btn col sticker-btn" type="simple">
+			      				<i class="fas fa-grin-wink fa-5x text-warning"></i>
+			      				<p class="font-weight-bold">emoji</p>
+		      				</button>	
+			      		</div>
+			      		<div class="row">
+			      			<button class="btn col sticker-btn" type="simple">
+			      				<i class="fas fa-sort-alpha-down fa-5x text-info"></i>
+			      				<p class="font-weight-bold">alphabet</p>
+		      				</button>
+		      				<button class="btn col sticker-btn" type="simple">
+			      				<i class="fas fa-sort-numeric-down fa-5x text-info"></i>
+			      				<p class="font-weight-bold">numbers</p>
+		      				</button>
+			      		</div>
+			      	</div>
+          		</div>
+          	</div>
+           		
+		    <div class="col-7">
+		    	<div class="row">
+		    		<div class="col">
+				    	<ul class="nav nav-tabs">
+						  <li class="nav-item">
+						    <a class="nav-link active" href="#">스티커</a>
+						  </li>
+						  <li class="nav-item">
+						    <a class="nav-link" href="#">메모지</a>
+						  </li>
+						  <li class="nav-item">
+						    <a class="nav-link" href="#">Link</a>
+						  </li>
+						</ul>
+					</div>
+				</div>
+				<div class="row mb-2">
+					<div class="col">
+						<canvas id="canvas"></canvas>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col">
+						<div class="card shadow-sm">
+							<div class="card-body">
+								
+							</div>
+						</div>
+					</div>
+				</div>
+		    </div>
+		    
+		    <div class="col-3">
+		    	<div class="card mb-4 shadow-sm">
+         			<div class="card-header">
+	       				<h5 class="my-0 font-weight-normal text-center">포인트 스티커</h4>
+		      		</div>
+		      		<div class="card-body text-center" th:each="sl : ${stickerList}">
+			      		<div class="row">
+			      			<button class="btn col sticker-btn" type="point">
+			      				<img th:src="${sl[0].img}" class="img-fluid">
+			      				<p class="font-weight-bold" th:text="${sl[0].name}"></p>
+			      			</button>
+			      			<button class="btn col sticker-btn" type="point">
+			      				<img th:src="${sl[1].img}" class="img-fluid">
+			      				<p class="font-weight-bold" th:text="${sl[1].name}"></p>
+			      			</button>
+			      		</div>
+			      	</div>
+		      	</div>
+		    </div>
+		    
+		</div>
+		
+		<div class="modal fade" id="stickerModal" tabindex="-1" aria-labelledby="stickerModalLabel" aria-hidden="true">
+		  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title" id="stickerModalLabel"></h5>&nbsp;
+		        <h5 class="modal-title"><a href="https://www.flaticon.com/kr/authors/freepik" title="Freepik">Freepik</a></h5>
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+		      </div>
+		      <div class="modal-body" id="modal-body"></div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+		
+	</div>
+	
+	<th:block layout:fragment="dakku-palette">
+		<div class="row mb-4">
+			<div class="col">
+				<div class="card">
+					<div class="card-body">
+						<div class="btn-toolbar" role="toolbar">
+						  <div class="input-group mr-2">
+							<button id="clear-canvas" class="btn btn-primary mr-1"><i class="fas fa-eraser"></i></button>
+                               <button id="remove-selected" class="btn btn-primary mr-2"><i class="fas fa-trash-alt"></i></button>
+						  	<button id="add-font" class="btn btn-primary font-weight-bold">T</button>
+						  </div>
+						  <div class="btn-group mr-2" role="group">
+							<button id="font-weight" class="btn btn-primary"><i class="fas fa-bold"></i></button>
+							<button id="font-italic" class="btn btn-primary"><i class="fas fa-italic"></i></button>
+							<button id="font-underline" class="btn btn-primary"><i class="fas fa-underline"></i></button>
+						  </div>
+						  <div class="btn-group mr-2" role="group">
+						  	<button id="font-left" class="btn btn-primary"><i class="fas fa-align-left"></i></button>
+							<button id="font-center" class="btn btn-primary"><i class="fas fa-align-center"></i></button>
+							<button id="font-right" class="btn btn-primary"><i class="fas fa-align-right"></i></button>
+						  </div>
+						  <div class="input-group mr-4">
+						    <div class="input-group-prepend">
+						      <label class="input-group-text" for="font-family"><i class="fas fa-font"></i></label>
+						    </div>
+							<select class="custom-select" id="font-family"></select>										    
+						  </div>
+						  <div class="input-group mr-4">
+						  	<label for="font-color" class="col-form-label mr-2">색상</label>
+						  	<input type="color" id="font-color" class="mr-1 mt-2">
+						  	<input type="color" id="font-background-color" class="mr-1 mt-2">
+						  </div>
+						  <div class="input-group">
+						  	<label for="font-size" class="col-form-label mr-2">크기</label>
+						  	<input type="range" class="mt-2" id="font-size" value="30" min="5" max="100">
+						  </div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row mb-4">
+			<div class="col">
+				<div class="card">
+					<div class="card-body">
+						<div class="btn-toolbar" role="toolbar">
+							<div class="input-group mr-4">
+								<button id="drawing-mode" class="btn btn-primary"><i class="fas fa-palette"></i></button>
+							</div>
+							<div id="drawing-mode-options" style="display: none;" class="input-group">
+                               	<div class="input-group mr-4">
+								   <div class="input-group-prepend">
+								     <label class="input-group-text" for="drawing-mode-selector"><i class="fas fa-paint-brush"></i></label>
+								   </div>
+									<select class="custom-select" id="drawing-mode-selector">
+									   <option value="Pencil">연필</option>
+	                                   <option value="Circle">물방울</option>
+	                                   <option value="Spray">스프레이</option>
+	                                   <option value="Pattern">원패턴</option>
+	                                   <option value="hline">가로줄패턴</option>
+	                                   <option value="vline">세로줄패턴</option>
+	                                   <option value="square">사각패턴</option>
+	                                   <option value="diamond">다이아몬드패턴</option>
+	                                   <option value="texture">텍스쳐</option>
+									</select>										    
+							    </div>
+                                  <div class="input-group mr-4">
+	                                  <label for="drawing-line-width" class="col-form-label mr-2">굵기</label>
+	                                  <span class="info col-form-label mr-2">30</span><input type="range" value="30" min="0" max="150" id="drawing-line-width">
+                                  </div>
+                               	  <div class="input-group mr-4">
+	                                   <label for="drawing-color" class="col-form-label mr-2">색상</label>
+	                                   <input type="color" value="#005E7A" id="drawing-color" class="mr-1 mt-2">
+	                                   <input type="color" value="#005E7A" id="drawing-shadow-color" class="mt-2">
+                               	  </div>
+                               	  <div class="input-group mr-4">
+	                                   <label for="drawing-shadow-width" class="col-form-label mr-2">그림자 굵기</label>
+	                                   <span class="info col-form-label mr-2">0</span><input type="range" value="0" min="0" max="50" id="drawing-shadow-width">
+                               	  </div>
+                               	  <div class="input-group">
+	                                   <label for="drawing-shadow-offset" class="col-form-label mr-2">그림자 오프셋</label>
+	                                   <span class="info col-form-label mr-2">0</span><input type="range" value="0" min="0" max="50" id="drawing-shadow-offset">
+                               	  </div>
+                                </div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</th:block>
+	
+</html>
